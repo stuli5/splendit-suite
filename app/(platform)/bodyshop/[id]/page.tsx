@@ -8,6 +8,7 @@ import {
   updateContract, formatCurrency, marginPercent, monthLabel
 } from '@/lib/bodyshop'
 import type { Contract, Worklog } from '@/lib/types'
+import EditContractModal from '@/components/bodyshop/EditContractModal'
 
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -16,6 +17,7 @@ export default function ContractDetailPage() {
   const [contract,  setContract]  = useState<Contract | null>(null)
   const [worklogs,  setWorklogs]  = useState<Worklog[]>([])
   const [loading,   setLoading]   = useState(true)
+  const [showEdit,  setShowEdit]  = useState(false)
 
   // worklog form
   const [wMonth,    setWMonth]    = useState(new Date().toISOString().slice(0, 7))
@@ -93,16 +95,28 @@ export default function ContractDetailPage() {
             {contract.clientName} · started {new Date(contract.startDate).toLocaleDateString('en-GB')}
           </p>
         </div>
-        <button
-          onClick={toggleStatus}
-          style={{
-            padding: '8px 16px', borderRadius: 9, border: '1px solid var(--card-border)',
-            background: 'white', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
-            color: contract.status === 'active' ? '#e0457a' : '#00a87a',
-          }}
-        >
-          {contract.status === 'active' ? 'End Contract' : 'Reactivate'}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setShowEdit(true)}
+            style={{
+              padding: '8px 16px', borderRadius: 9, border: 'none',
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              color: 'white', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+            }}
+          >
+            Edit Contract
+          </button>
+          <button
+            onClick={toggleStatus}
+            style={{
+              padding: '8px 16px', borderRadius: 9, border: '1px solid var(--card-border)',
+              background: 'white', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+              color: contract.status === 'active' ? '#e0457a' : '#00a87a',
+            }}
+          >
+            {contract.status === 'active' ? 'End Contract' : 'Reactivate'}
+          </button>
+        </div>
       </div>
 
       {/* Contract info */}
@@ -332,6 +346,14 @@ export default function ContractDetailPage() {
           </form>
         </div>
       </div>
+
+      {showEdit && (
+        <EditContractModal
+          contract={contract}
+          onClose={() => setShowEdit(false)}
+          onSaved={() => { setShowEdit(false); load() }}
+        />
+      )}
     </div>
   )
 }

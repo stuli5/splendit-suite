@@ -21,7 +21,8 @@ export async function createContract(data: Omit<Contract, 'id' | 'createdAt'>): 
 }
 
 export async function updateContract(id: string, data: Partial<Contract>): Promise<void> {
-  await updateDoc(doc(db, 'contracts', id), data)
+  const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))
+  await updateDoc(doc(db, 'contracts', id), clean)
 }
 
 export async function deleteContract(id: string): Promise<void> {

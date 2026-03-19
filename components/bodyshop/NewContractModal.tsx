@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { createContract } from '@/lib/bodyshop'
 import { getCompanies } from '@/lib/companies'
-import type { Currency, Company } from '@/lib/types'
+import { getPeople, initials } from '@/lib/meet-visu'
+import type { Currency, Company, Person } from '@/lib/types'
 
 interface Props {
   onClose: () => void
@@ -25,21 +26,26 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
     managerRole: '',
     note: '',
   })
-  const [saving,      setSaving]      = useState(false)
-  const [companies,   setCompanies]   = useState<Company[]>([])
-  const [suggestions, setSuggestions] = useState<Company[]>([])
-  const [showSuggest, setShowSuggest] = useState(false)
+  const [saving,        setSaving]        = useState(false)
+  const [companies,     setCompanies]     = useState<Company[]>([])
+  const [suggestions,   setSuggestions]   = useState<Company[]>([])
+  const [showSuggest,   setShowSuggest]   = useState(false)
   const suggestRef = useRef<HTMLDivElement>(null)
+
+  const [people,        setPeople]        = useState<Person[]>([])
+  const [mgmtQuery,     setMgmtQuery]     = useState('')
+  const [showMgmt,      setShowMgmt]      = useState(false)
+  const mgmtRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     getCompanies().then(setCompanies)
+    getPeople().then(setPeople)
   }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
-        setShowSuggest(false)
-      }
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) setShowSuggest(false)
+      if (mgmtRef.current   && !mgmtRef.current.contains(e.target as Node))     setShowMgmt(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -201,7 +207,63 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <Field label="MANAGER (name)">
-              <input value={form.managerName} onChange={e => set('managerName', e.target.value)} style={inp} placeholder="Jane Smith" />
+              <div ref={mgmtRef} style={{ position: 'relative' }}>
+                <input
+                  value={mgmtQuery || form.managerName}
+                  onChange={e => {
+                    setMgmtQuery(e.target.value)
+                    set('managerName', e.target.value)
+                    setShowMgmt(true)
+                  }}
+                  onFocus={() => setShowMgmt(true)}
+                  style={inp}
+                  placeholder="Jane Smith"
+                  autoComplete="off"
+                />
+                {showMgmt && mgmtQuery.trim().length > 0 && (() => {
+                  const matches = people.filter(p =>
+                    p.name.toLowerCase().includes(mgmtQuery.toLowerCase())
+                  ).slice(0, 6)
+                  return matches.length > 0 ? (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 300,
+                      background: 'white', border: '1px solid rgba(0,168,122,0.2)',
+                      borderRadius: 9, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', overflow: 'hidden',
+                    }}>
+                      {matches.map(p => (
+                        <div
+                          key={p.id}
+                          onMouseDown={() => {
+                            set('managerName', p.name)
+                            if (p.role) set('managerRole', p.role)
+                            setMgmtQuery('')
+                            setShowMgmt(false)
+                          }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+                        >
+                          <div style={{
+                            width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                            background: 'rgba(0,168,122,0.12)', color: 'var(--primary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.62rem', fontWeight: 700, overflow: 'hidden',
+                          }}>
+                            {p.photo
+                              ? <img src={p.photo} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} alt="" />
+                              : initials(p.name)
+                            }
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                              {[p.role, p.level, p.tribe].filter(Boolean).join(' · ')}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null
+                })()}
+              </div>
             </Field>
             <Field label="MANAGER ROLE">
               <input value={form.managerRole} onChange={e => set('managerRole', e.target.value)} style={inp} placeholder="Senior Recruiter" />
