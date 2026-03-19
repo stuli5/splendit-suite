@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --primary:       #00a87a;
+  --primary-dark:  #007a59;
+  --primary-light: #00d49a;
+  --secondary:     #0091c7;
+  --accent:        #6b46a8;
+  --pink:          #e0457a;
+  --cyan:          #2db8b0;
+
+  --bg0: #f0faf8;
+  --bg1: #e6f7f4;
+  --bg2: #d8f2ee;
+
+  --text:       #0f2e2a;
+  --text-muted: #3d7a70;
+  --text-dim:   #7ab8ae;
+
+  --card-bg:     rgba(255, 255, 255, 0.82);
+  --card-border: rgba(0, 168, 122, 0.15);
+
+  --sidebar-width: 240px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg0);
+  color: var(--text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Syne', sans-serif;
+}
+
+/* Aurora background */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: adrift linear infinite;
+}
+
+.aurora-blob:nth-child(1) {
+  width: 900px; height: 400px;
+  top: -150px; left: -200px;
+  background: radial-gradient(ellipse, rgba(0,168,122,0.22) 0%, transparent 70%);
+  animation-duration: 22s;
+}
+.aurora-blob:nth-child(2) {
+  width: 700px; height: 350px;
+  top: -100px; right: -150px;
+  background: radial-gradient(ellipse, rgba(0,145,199,0.18) 0%, transparent 70%);
+  animation-duration: 28s;
+  animation-delay: -10s;
+}
+.aurora-blob:nth-child(3) {
+  width: 600px; height: 500px;
+  bottom: -200px; left: 40%;
+  background: radial-gradient(ellipse, rgba(107,70,168,0.14) 0%, transparent 70%);
+  animation-duration: 32s;
+  animation-delay: -16s;
+}
+
+@keyframes adrift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  33%  { transform: translate(40px, -30px) rotate(5deg); }
+  66%  { transform: translate(-20px, 20px) rotate(-3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 168, 122, 0.06);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 168, 122, 0.12);
+  border-color: rgba(0, 168, 122, 0.3);
+}
