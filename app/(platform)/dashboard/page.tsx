@@ -1,14 +1,14 @@
 import Link from 'next/link'
 
 const modules = [
-  { href: '/crm/kandidati',   icon: '👤', label: 'Kandidáti',      desc: 'Správa kandidátů a pipeline',       color: '#00a87a' },
-  { href: '/crm/spolecnosti', icon: '🏢', label: 'Společnosti',    desc: 'Klienti a partnerské firmy',        color: '#0091c7' },
-  { href: '/crm/projekty',    icon: '📁', label: 'Projekty',       desc: 'Aktivní pozice a zakázky',          color: '#2db8b0' },
+  { href: '/crm/kandidati',   icon: '👤', label: 'Candidates',     desc: 'Candidate management & pipeline',   color: '#00a87a' },
+  { href: '/crm/spolecnosti', icon: '🏢', label: 'Companies',      desc: 'Clients & partner companies',       color: '#0091c7' },
+  { href: '/crm/projekty',    icon: '📁', label: 'Projects',       desc: 'Active positions & orders',         color: '#2db8b0' },
   { href: '/ims',             icon: '🎯', label: 'IMS',            desc: 'Interview Management System',       color: '#6b46a8' },
-  { href: '/meet-visualizer', icon: '🕸', label: 'Meet Visualizer',desc: 'Vizualizace sítí a meetingů',       color: '#2db8b0' },
-  { href: '/deal-radar',      icon: '📡', label: 'Deal Radar',     desc: 'Pipeline dealy a obchodní fáze',   color: '#e0457a' },
-  { href: '/bodyshop',        icon: '🏗', label: 'Bodyshop',       desc: 'Správa kontraktorů',                color: '#f59e0b' },
-  { href: '/bot',             icon: '🤖', label: 'SplenditBot',    desc: 'Automatizace a AI asistent',        color: '#0091c7' },
+  { href: '/meet-visualizer', icon: '🕸', label: 'Meet Visualizer',desc: 'Network & meeting visualizer',      color: '#2db8b0' },
+  { href: '/deal-radar',      icon: '📡', label: 'Deal Radar',     desc: 'Pipeline deals & stages',           color: '#e0457a' },
+  { href: '/bodyshop',        icon: '🏗', label: 'Bodyshop',       desc: 'Contractor management',             color: '#f59e0b' },
+  { href: '/bot',             icon: '🤖', label: 'SplenditBot',    desc: 'Automation & AI assistant',         color: '#0091c7' },
 ]
 
 export default function DashboardPage() {
@@ -49,7 +49,7 @@ export default function DashboardPage() {
                 {m.desc}
               </p>
               <div style={{ marginTop: 14, fontSize: '0.68rem', color: m.color, fontWeight: 600, letterSpacing: '0.05em' }}>
-                OTEVŘÍT →
+                OPEN →
               </div>
             </div>
           </Link>

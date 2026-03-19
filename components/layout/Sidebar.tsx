@@ -7,9 +7,9 @@ import { auth } from '@/lib/firebase'
 
 const modules = [
   { href: '/dashboard',       icon: '⬡', label: 'Dashboard' },
-  { href: '/crm/kandidati',   icon: '👤', label: 'Kandidáti' },
-  { href: '/crm/spolecnosti', icon: '🏢', label: 'Společnosti' },
-  { href: '/crm/projekty',    icon: '📁', label: 'Projekty' },
+  { href: '/crm/kandidati',   icon: '👤', label: 'Candidates' },
+  { href: '/crm/spolecnosti', icon: '🏢', label: 'Companies' },
+  { href: '/crm/projekty',    icon: '📁', label: 'Projects' },
   { href: '/ims',             icon: '🎯', label: 'IMS' },
   { href: '/meet-visualizer', icon: '🕸', label: 'Meet Visualizer' },
   { href: '/deal-radar',      icon: '📡', label: 'Deal Radar' },
@@ -107,7 +107,7 @@ export default function Sidebar() {
           onMouseEnter={(e) => (e.currentTarget.style.color = '#e0457a')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
         >
-          <span>🚪</span> Odhlásit se
+          <span>🚪</span> Sign out
         </button>
       </div>
     </aside>

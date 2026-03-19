@@ -63,10 +63,10 @@ export default function ContractDetailPage() {
   }
 
   if (loading) return (
-    <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)' }}>Načítám...</div>
+    <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)' }}>Loading...</div>
   )
   if (!contract) return (
-    <div style={{ padding: 40, textAlign: 'center', color: '#e0457a' }}>Kontrakt nenalezen.</div>
+    <div style={{ padding: 40, textAlign: 'center', color: '#e0457a' }}>Contract not found.</div>
   )
 
   const margin      = marginPercent(contract.mdRateClient, contract.mdRateContractor)
@@ -80,7 +80,7 @@ export default function ContractDetailPage() {
     <div>
       {/* Back */}
       <Link href="/bodyshop" style={{ fontSize: '0.78rem', color: 'var(--text-dim)', textDecoration: 'none', display: 'inline-block', marginBottom: 20 }}>
-        ← Zpět na Bodyshop
+        ← Back to Bodyshop
       </Link>
 
       {/* Header */}
@@ -90,7 +90,7 @@ export default function ContractDetailPage() {
             {contract.contractorName}
           </h1>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
-            {contract.clientName} · nástup {new Date(contract.startDate).toLocaleDateString('cs-CZ')}
+            {contract.clientName} · started {new Date(contract.startDate).toLocaleDateString('en-GB')}
           </p>
         </div>
         <button
@@ -101,17 +101,17 @@ export default function ContractDetailPage() {
             color: contract.status === 'active' ? '#e0457a' : '#00a87a',
           }}
         >
-          {contract.status === 'active' ? 'Ukončit kontrakt' : 'Reaktivovat'}
+          {contract.status === 'active' ? 'End Contract' : 'Reactivate'}
         </button>
       </div>
 
       {/* Contract info */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
         {[
-          { label: 'MD náklad',  value: formatCurrency(contract.mdRateContractor, contract.currency), color: '#e0457a' },
-          { label: 'MD prodej',  value: formatCurrency(contract.mdRateClient,    contract.currency), color: '#0091c7' },
-          { label: 'Marža',      value: `${margin} %`,                                               color: marginColor },
-          { label: 'Status',     value: contract.status === 'active' ? 'Aktivní' : 'Ukončen',        color: contract.status === 'active' ? '#00a87a' : 'var(--text-dim)' },
+          { label: 'MD Cost',    value: formatCurrency(contract.mdRateContractor, contract.currency), color: '#e0457a' },
+          { label: 'MD Rate',    value: formatCurrency(contract.mdRateClient,    contract.currency), color: '#0091c7' },
+          { label: 'Margin',     value: `${margin} %`,                                               color: marginColor },
+          { label: 'Status',     value: contract.status === 'active' ? 'Active' : 'Ended',           color: contract.status === 'active' ? '#00a87a' : 'var(--text-dim)' },
         ].map(k => (
           <div key={k.label} className="glass-card" style={{ padding: '16px 18px' }}>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 5, letterSpacing: '0.06em' }}>
@@ -124,27 +124,71 @@ export default function ContractDetailPage() {
         ))}
       </div>
 
+      {/* Order & invoice info */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: contract.managerName ? 12 : 28 }}>
+        {[
+          {
+            label: 'Order Duration',
+            value: contract.endDate
+              ? `${new Date(contract.startDate).toLocaleDateString('en-GB')} – ${new Date(contract.endDate).toLocaleDateString('en-GB')}`
+              : `from ${new Date(contract.startDate).toLocaleDateString('en-GB')}`,
+            color: 'var(--text)',
+          },
+          {
+            label: 'Invoice terms — contractor',
+            value: contract.invoiceDaysContractor ? `${contract.invoiceDaysContractor} days` : '—',
+            color: '#6b46a8',
+          },
+          {
+            label: 'Invoice terms — client',
+            value: contract.invoiceDaysClient ? `${contract.invoiceDaysClient} days` : '—',
+            color: '#0091c7',
+          },
+          { label: '', value: '', color: 'transparent' },
+        ].map(k => (
+          <div key={k.label} className="glass-card" style={{ padding: '16px 18px' }}>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 5, letterSpacing: '0.06em' }}>
+              {k.label.toUpperCase()}
+            </div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: k.color }}>
+              {k.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Manager info */}
+      {contract.managerName && (
+        <div className="glass-card" style={{ padding: '14px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em' }}>MANAGER</div>
+          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>{contract.managerName}</div>
+          {contract.managerRole && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{contract.managerRole}</div>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20 }}>
         {/* Worklogs table */}
         <div className="glass-card" style={{ overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>
-              Odpracované dny
+              Worked Days
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-              Celkem {totalDays} MD · zisk {formatCurrency(totalProfit, contract.currency)}
+              Total {totalDays} MD · profit {formatCurrency(totalProfit, contract.currency)}
             </span>
           </div>
 
           {worklogs.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-              Zatím žádné záznamy. Přidej první měsíční výkaz.
+              No records yet. Add the first monthly report.
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'rgba(0,168,122,0.04)' }}>
-                  {['Měsíc', 'Dny', 'Tržby', 'Náklady', 'Zisk', ''].map(h => (
+                  {['Month', 'Days', 'Revenue', 'Costs', 'Profit', ''].map(h => (
                     <th key={h} style={{
                       padding: '9px 16px', textAlign: 'left', fontSize: '0.68rem',
                       color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em',
@@ -175,10 +219,10 @@ export default function ContractDetailPage() {
                     </td>
                     <td style={{ padding: '11px 16px', display: 'flex', gap: 10 }}>
                       <button onClick={() => startEdit(w)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>
-                        Upravit
+                        Edit
                       </button>
                       <button onClick={() => handleDelete(w.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#e0457a', fontWeight: 600 }}>
-                        Smazat
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -187,7 +231,7 @@ export default function ContractDetailPage() {
               {/* Totals */}
               <tfoot>
                 <tr style={{ background: 'rgba(0,168,122,0.04)', borderTop: '2px solid var(--card-border)' }}>
-                  <td style={{ padding: '11px 16px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)' }}>CELKEM</td>
+                  <td style={{ padding: '11px 16px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)' }}>TOTAL</td>
                   <td style={{ padding: '11px 16px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)' }}>{totalDays}</td>
                   <td style={{ padding: '11px 16px', fontSize: '0.78rem', fontWeight: 700, color: '#0091c7' }}>{formatCurrency(totalRevenue, contract.currency)}</td>
                   <td style={{ padding: '11px 16px', fontSize: '0.78rem', fontWeight: 700, color: '#e0457a' }}>{formatCurrency(totalCost, contract.currency)}</td>
@@ -202,12 +246,12 @@ export default function ContractDetailPage() {
         {/* Add worklog form */}
         <div className="glass-card" style={{ padding: '20px 22px', alignSelf: 'start' }}>
           <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', marginBottom: 18 }}>
-            {editId ? 'Upravit výkaz' : 'Přidat výkaz'}
+            {editId ? 'Edit Report' : 'Add Report'}
           </div>
           <form onSubmit={handleSaveWorklog} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, display: 'block', marginBottom: 5, letterSpacing: '0.06em' }}>
-                MĚSÍC
+                MONTH
               </label>
               <input
                 type="month"
@@ -219,7 +263,7 @@ export default function ContractDetailPage() {
             </div>
             <div>
               <label style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, display: 'block', marginBottom: 5, letterSpacing: '0.06em' }}>
-                ODPRACOVANÉ DNY (MD)
+                WORKED DAYS (MD)
               </label>
               <input
                 type="number"
@@ -228,7 +272,7 @@ export default function ContractDetailPage() {
                 step="0.5"
                 value={wDays}
                 onChange={e => setWDays(e.target.value)}
-                placeholder="napr. 20"
+                placeholder="e.g. 20"
                 required
                 style={inputStyle}
               />
@@ -237,19 +281,19 @@ export default function ContractDetailPage() {
             {wDays && (
               <div style={{ background: 'rgba(0,168,122,0.06)', borderRadius: 9, padding: '12px 14px', fontSize: '0.78rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ color: 'var(--text-dim)' }}>Tržby</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Revenue</span>
                   <span style={{ color: '#0091c7', fontWeight: 600 }}>
                     {formatCurrency(Number(wDays) * contract.mdRateClient, contract.currency)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ color: 'var(--text-dim)' }}>Náklady</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Costs</span>
                   <span style={{ color: '#e0457a', fontWeight: 600 }}>
                     {formatCurrency(Number(wDays) * contract.mdRateContractor, contract.currency)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: 6, marginTop: 4 }}>
-                  <span style={{ color: 'var(--text)', fontWeight: 700 }}>Zisk</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 700 }}>Profit</span>
                   <span style={{ color: '#00a87a', fontWeight: 700 }}>
                     {formatCurrency(Number(wDays) * (contract.mdRateClient - contract.mdRateContractor), contract.currency)}
                   </span>
@@ -269,7 +313,7 @@ export default function ContractDetailPage() {
                   opacity: wSaving ? 0.7 : 1,
                 }}
               >
-                {wSaving ? 'Ukládám...' : editId ? 'Uložit' : 'Přidat'}
+                {wSaving ? 'Saving...' : editId ? 'Save' : 'Add'}
               </button>
               {editId && (
                 <button
@@ -281,7 +325,7 @@ export default function ContractDetailPage() {
                     cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text-muted)',
                   }}
                 >
-                  Zrušit
+                  Cancel
                 </button>
               )}
             </div>

@@ -20,7 +20,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password)
       router.push('/dashboard')
     } catch {
-      setError('Nesprávný e-mail nebo heslo.')
+      setError('Invalid email or password.')
     } finally {
       setLoading(false)
     }
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
           <div>
             <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: 5 }}>
-              HESLO
+              PASSWORD
             </label>
             <input
               type="password"
@@ -123,7 +123,7 @@ export default function LoginPage() {
               transition: 'opacity 0.2s',
             }}
           >
-            {loading ? 'Přihlašování...' : 'Přihlásit se'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
       </div>

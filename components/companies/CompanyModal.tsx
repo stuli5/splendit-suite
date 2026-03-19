@@ -55,7 +55,7 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
     setAresError('')
     const result = await lookupIco(icoInput)
     if (!result) {
-      setAresError('IČO nenalezeno v ARES. Zkontroluj číslo.')
+      setAresError('Company ID not found in ARES. Please check the number.')
     } else {
       setForm(f => ({ ...f, ico: result.ico, name: result.name, legalForm: result.legalForm, street: result.street, city: result.city, zip: result.zip }))
       setIcoInput('')
@@ -86,14 +86,14 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text)', marginBottom: 24 }}>
-          {company ? 'Upravit společnost' : 'Přidat společnost'}
+          {company ? 'Edit Company' : 'Add Company'}
         </div>
 
         {/* IČO lookup */}
         {!company && (
           <div style={{ marginBottom: 20, padding: 16, background: 'rgba(0,168,122,0.06)', borderRadius: 10 }}>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, marginBottom: 8, letterSpacing: '0.06em' }}>
-              VYHLEDAT DLE IČO (ARES)
+              LOOKUP BY COMPANY ID (ARES)
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
@@ -105,11 +105,11 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
                 style={{ ...inp, flex: 1 }}
               />
               <button type="button" onClick={handleLookup} disabled={looking || icoInput.length < 6} style={lookupBtn(looking || icoInput.length < 6)}>
-                {looking ? 'Hledám...' : 'Vyhledat'}
+                {looking ? 'Searching...' : 'Search'}
               </button>
             </div>
             {aresError && <p style={{ fontSize: '0.75rem', color: '#e0457a', marginTop: 6 }}>{aresError}</p>}
-            {form.name && <p style={{ fontSize: '0.75rem', color: '#00a87a', marginTop: 6 }}>✓ Nalezeno: <strong>{form.name}</strong></p>}
+            {form.name && <p style={{ fontSize: '0.75rem', color: '#00a87a', marginTop: 6 }}>✓ Found: <strong>{form.name}</strong></p>}
           </div>
         )}
 
@@ -117,43 +117,43 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
 
           {/* Firma */}
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 10 }}>
-            <Field label="IČO">
+            <Field label="COMPANY ID">
               <input value={form.ico} onChange={e => set('ico', e.target.value)} required style={inp} placeholder="12345678" maxLength={8} />
             </Field>
-            <Field label="NÁZEV FIRMY">
-              <input value={form.name} onChange={e => set('name', e.target.value)} required style={inp} placeholder="Firma s.r.o." />
+            <Field label="COMPANY NAME">
+              <input value={form.name} onChange={e => set('name', e.target.value)} required style={inp} placeholder="Company Ltd." />
             </Field>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="PRÁVNÍ FORMA">
-              <input value={form.legalForm} onChange={e => set('legalForm', e.target.value)} style={inp} placeholder="s.r.o." />
+            <Field label="LEGAL FORM">
+              <input value={form.legalForm} onChange={e => set('legalForm', e.target.value)} style={inp} placeholder="Ltd." />
             </Field>
-            <Field label="TYP">
+            <Field label="TYPE">
               <select value={form.type} onChange={e => set('type', e.target.value)} style={inp}>
                 {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </Field>
           </div>
 
-          <Field label="ULICE">
-            <input value={form.street} onChange={e => set('street', e.target.value)} style={inp} placeholder="Ulice 123" />
+          <Field label="STREET">
+            <input value={form.street} onChange={e => set('street', e.target.value)} style={inp} placeholder="Street 123" />
           </Field>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 10 }}>
-            <Field label="MĚSTO">
-              <input value={form.city} onChange={e => set('city', e.target.value)} style={inp} placeholder="Praha" />
+            <Field label="CITY">
+              <input value={form.city} onChange={e => set('city', e.target.value)} style={inp} placeholder="Prague" />
             </Field>
-            <Field label="PSČ">
+            <Field label="ZIP">
               <input value={form.zip} onChange={e => set('zip', e.target.value)} style={inp} placeholder="11000" />
             </Field>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="FIREMNÍ EMAIL">
-              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} style={inp} placeholder="info@firma.cz" />
+            <Field label="COMPANY EMAIL">
+              <input type="email" value={form.email} onChange={e => set('email', e.target.value)} style={inp} placeholder="info@company.com" />
             </Field>
-            <Field label="FIREMNÍ TELEFON">
+            <Field label="COMPANY PHONE">
               <input value={form.phone} onChange={e => set('phone', e.target.value)} style={inp} placeholder="+420 123 456 789" />
             </Field>
           </div>
@@ -166,20 +166,20 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
           <div style={{ marginTop: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em' }}>
-                KONTAKTNÍ OSOBY
+                CONTACT PERSONS
               </div>
               <button
                 type="button"
                 onClick={addContact}
                 style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
               >
-                + Přidat osobu
+                + Add person
               </button>
             </div>
 
             {contacts.length === 0 && (
               <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', padding: '10px 0' }}>
-                Žádné kontaktní osoby. Klikni na „+ Přidat osobu".
+                No contact persons yet. Click "+ Add person".
               </div>
             )}
 
@@ -187,20 +187,20 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
               {contacts.map((c, i) => (
                 <div key={i} style={{ background: 'rgba(0,168,122,0.04)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--card-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Osoba {i + 1}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Person {i + 1}</span>
                     <button
                       type="button"
                       onClick={() => removeContact(i)}
                       style={{ fontSize: '0.72rem', color: '#e0457a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
                     >
-                      Odebrat
+                      Remove
                     </button>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <Field label="JMÉNO">
-                      <input value={c.name} onChange={e => setContact(i, 'name', e.target.value)} style={inp} placeholder="Jan Novák" />
+                    <Field label="NAME">
+                      <input value={c.name} onChange={e => setContact(i, 'name', e.target.value)} style={inp} placeholder="John Smith" />
                     </Field>
-                    <Field label="POZICE">
+                    <Field label="POSITION">
                       <input value={c.position} onChange={e => setContact(i, 'position', e.target.value)} style={inp} placeholder="HR Manager" />
                     </Field>
                     <Field label="EMAIL">
@@ -215,15 +215,15 @@ export default function CompanyModal({ company, onClose, onSaved }: Props) {
             </div>
           </div>
 
-          <Field label="POZNÁMKA">
-            <textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Nepovinné" />
+          <Field label="NOTE">
+            <textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Optional" />
           </Field>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
             <button type="submit" disabled={saving} style={submitBtn(saving)}>
-              {saving ? 'Ukládám...' : company ? 'Uložit změny' : 'Přidat společnost'}
+              {saving ? 'Saving...' : company ? 'Save Changes' : 'Add Company'}
             </button>
-            <button type="button" onClick={onClose} style={cancelBtn}>Zrušit</button>
+            <button type="button" onClick={onClose} style={cancelBtn}>Cancel</button>
           </div>
         </form>
       </div>

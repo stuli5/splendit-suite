@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getContracts, getAllWorklogs, formatCurrency, marginPercent } from '@/lib/bodyshop'
+import { getContracts, getAllWorklogs, deleteContract, clearAllWorklogs, formatCurrency, marginPercent } from '@/lib/bodyshop'
 import type { Contract, Worklog } from '@/lib/types'
 import NewContractModal from '@/components/bodyshop/NewContractModal'
 
 export default function BodyshopPage() {
-  const [contracts, setContracts] = useState<Contract[]>([])
-  const [worklogs,  setWorklogs]  = useState<Worklog[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [showModal, setShowModal] = useState(false)
+  const [contracts,     setContracts]     = useState<Contract[]>([])
+  const [worklogs,      setWorklogs]      = useState<Worklog[]>([])
+  const [loading,       setLoading]       = useState(true)
+  const [showModal,     setShowModal]     = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
   async function load() {
     const [c, w] = await Promise.all([getContracts(), getAllWorklogs()])
@@ -21,18 +22,31 @@ export default function BodyshopPage() {
 
   useEffect(() => { load() }, [])
 
-  const currentMonth  = new Date().toISOString().slice(0, 7)
-  const thisMonthLogs = worklogs.filter(w => w.month === currentMonth)
-  const totalRevenue  = thisMonthLogs.reduce((s, w) => s + w.revenue, 0)
-  const totalCost     = thisMonthLogs.reduce((s, w) => s + w.cost, 0)
-  const totalProfit   = thisMonthLogs.reduce((s, w) => s + w.profit, 0)
-  const activeCount   = contracts.filter(c => c.status === 'active').length
+  const selectedLogs = worklogs.filter(w => w.month === selectedMonth)
+  const totalRevenue = selectedLogs.reduce((s, w) => s + w.revenue, 0)
+  const totalCost    = selectedLogs.reduce((s, w) => s + w.cost, 0)
+  const totalProfit  = selectedLogs.reduce((s, w) => s + w.profit, 0)
+  const activeCount  = contracts.filter(c => c.status === 'active').length
+
+  const currentYear   = new Date().getFullYear().toString()
+  const yearLogs      = worklogs.filter(w => w.month.startsWith(currentYear))
+  const yearRevenue   = yearLogs.reduce((s, w) => s + w.revenue, 0)
+  const yearCost      = yearLogs.reduce((s, w) => s + w.cost, 0)
+  const yearProfit    = yearLogs.reduce((s, w) => s + w.profit, 0)
+
+  // Mesiace pre ktoré existujú záznamy
+  const availableMonths = [...new Set(worklogs.map(w => w.month))].sort((a, b) => b.localeCompare(a))
+
+  const monthLabel = (m: string) =>
+    new Date(m + '-01').toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+
+  const isCurrentMonth = selectedMonth === new Date().toISOString().slice(0, 7)
 
   const kpi = [
-    { label: 'Aktivní kontraktoři', value: String(activeCount),                color: '#00a87a' },
-    { label: 'Tržby tento měsíc',   value: formatCurrency(totalRevenue, 'CZK'), color: '#0091c7' },
-    { label: 'Náklady tento měsíc', value: formatCurrency(totalCost,    'CZK'), color: '#e0457a' },
-    { label: 'Zisk tento měsíc',    value: formatCurrency(totalProfit,  'CZK'), color: '#6b46a8' },
+    { label: 'Active Contractors', value: String(activeCount),                color: '#00a87a' },
+    { label: 'Revenue',            value: formatCurrency(totalRevenue, 'CZK'), color: '#0091c7' },
+    { label: 'Costs',              value: formatCurrency(totalCost,    'CZK'), color: '#e0457a' },
+    { label: 'Profit',             value: formatCurrency(totalProfit,  'CZK'), color: '#6b46a8' },
   ]
 
   return (
@@ -43,20 +57,110 @@ export default function BodyshopPage() {
             🏗 Bodyshop
           </h1>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: 4 }}>
-            Správa kontraktorů, sazeb a měsíčních marží
+            Contractor management, rates & monthly margins
           </p>
         </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={async () => {
+              if (!confirm('Delete all revenue, cost and profit records? Contracts will be preserved.')) return
+              await clearAllWorklogs()
+              load()
+            }}
+            style={{
+              padding: '10px 18px', borderRadius: 9,
+              border: '1px solid rgba(224,69,122,0.3)', background: 'rgba(224,69,122,0.06)',
+              color: '#e0457a', fontFamily: 'Syne, sans-serif', fontWeight: 700,
+              fontSize: '0.85rem', cursor: 'pointer',
+            }}
+          >
+            Clear Data
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              padding: '10px 20px', borderRadius: 9, border: 'none',
+              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+              color: 'white', fontFamily: 'Syne, sans-serif', fontWeight: 700,
+              fontSize: '0.85rem', cursor: 'pointer',
+            }}
+          >
+            + New Contract
+          </button>
+        </div>
+      </div>
+
+      {/* Month picker */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            const d = new Date(selectedMonth + '-01')
+            d.setMonth(d.getMonth() - 1)
+            setSelectedMonth(d.toISOString().slice(0, 7))
+          }}
+          style={{ background: 'none', border: '1px solid var(--card-border)', borderRadius: 7, padding: '5px 12px', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)' }}
+        >
+          ‹
+        </button>
+        <select
+          value={selectedMonth}
+          onChange={e => setSelectedMonth(e.target.value)}
           style={{
-            padding: '10px 20px', borderRadius: 9, border: 'none',
-            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-            color: 'white', fontFamily: 'Syne, sans-serif', fontWeight: 700,
-            fontSize: '0.85rem', cursor: 'pointer',
+            padding: '7px 14px', borderRadius: 9, border: '1px solid rgba(0,168,122,0.25)',
+            background: 'rgba(255,255,255,0.8)', fontSize: '0.82rem',
+            fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)', outline: 'none', cursor: 'pointer',
           }}
         >
-          + Nový kontrakt
+          {/* Aktuálny mesiac vždy ako prvá možnosť */}
+          {!availableMonths.includes(selectedMonth) && (
+            <option value={selectedMonth}>{monthLabel(selectedMonth)}</option>
+          )}
+          {availableMonths.map(m => (
+            <option key={m} value={m}>{monthLabel(m)}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            const d = new Date(selectedMonth + '-01')
+            d.setMonth(d.getMonth() + 1)
+            setSelectedMonth(d.toISOString().slice(0, 7))
+          }}
+          disabled={isCurrentMonth}
+          style={{ background: 'none', border: '1px solid var(--card-border)', borderRadius: 7, padding: '5px 12px', cursor: isCurrentMonth ? 'not-allowed' : 'pointer', fontSize: '0.9rem', color: isCurrentMonth ? 'var(--text-dim)' : 'var(--text-muted)', opacity: isCurrentMonth ? 0.4 : 1 }}
+        >
+          ›
         </button>
+        {!isCurrentMonth && (
+          <button
+            onClick={() => setSelectedMonth(new Date().toISOString().slice(0, 7))}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginLeft: 4 }}
+          >
+            Today
+          </button>
+        )}
+        {selectedLogs.length === 0 && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginLeft: 8 }}>
+            No records for this month
+          </span>
+        )}
+      </div>
+
+      {/* Yearly summary */}
+      <div className="glass-card" style={{ padding: '12px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 32 }}>
+        <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+          {currentYear} TOTAL
+        </span>
+        {[
+          { label: 'Contractors', value: String(contracts.length),              color: '#00a87a' },
+          { label: 'Revenue',     value: formatCurrency(yearRevenue, 'CZK'),    color: '#0091c7' },
+          { label: 'Costs',       value: formatCurrency(yearCost,    'CZK'),    color: '#e0457a' },
+          { label: 'Profit',      value: formatCurrency(yearProfit,  'CZK'),    color: '#6b46a8' },
+        ].map(k => (
+          <div key={k.label} style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', letterSpacing: '0.04em' }}>{k.label.toUpperCase()}</span>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: k.color }}>{k.value}</span>
+          </div>
+        ))}
       </div>
 
       {/* KPI */}
@@ -77,23 +181,23 @@ export default function BodyshopPage() {
       <div className="glass-card" style={{ overflow: 'hidden' }}>
         <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--card-border)' }}>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)' }}>
-            Kontrakty
+            Contracts
           </span>
         </div>
 
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-            Načítám...
+            Loading...
           </div>
         ) : contracts.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-            Zatím žádné kontrakty. Přidej první kliknutím na „+ Nový kontrakt".
+            No contracts yet. Add the first one by clicking "+ New Contract".
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'rgba(0,168,122,0.04)' }}>
-                {['Kontraktor', 'Klient', 'Nástup', 'MD náklad', 'MD prodej', 'Marža', 'Status', ''].map(h => (
+                {['Contractor', 'Client', 'Start Date', 'MD Cost', 'MD Rate', 'Margin', 'Status', ''].map(h => (
                   <th key={h} style={{
                     padding: '10px 16px', textAlign: 'left',
                     fontSize: '0.68rem', color: 'var(--text-dim)',
@@ -118,7 +222,7 @@ export default function BodyshopPage() {
                       {c.clientName}
                     </td>
                     <td style={{ padding: '13px 16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {new Date(c.startDate).toLocaleDateString('cs-CZ')}
+                      {new Date(c.startDate).toLocaleDateString('en-GB')}
                     </td>
                     <td style={{ padding: '13px 16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {formatCurrency(c.mdRateContractor, c.currency)}
@@ -141,15 +245,29 @@ export default function BodyshopPage() {
                         background: c.status === 'active' ? 'rgba(0,168,122,0.12)' : 'rgba(0,0,0,0.05)',
                         padding: '3px 10px', borderRadius: 20,
                       }}>
-                        {c.status === 'active' ? 'Aktivní' : 'Ukončen'}
+                        {c.status === 'active' ? 'Active' : 'Ended'}
                       </span>
                     </td>
-                    <td style={{ padding: '13px 16px' }}>
+                    <td style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Link href={`/bodyshop/${c.id}`} style={{
                         fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 600,
                       }}>
                         Detail →
                       </Link>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Delete contract "${c.contractorName}"?`)) return
+                          await deleteContract(c.id)
+                          load()
+                        }}
+                        title="Delete contract"
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#e0457a', fontSize: '1rem', lineHeight: 1, padding: 0,
+                        }}
+                      >
+                        🗑
+                      </button>
                     </td>
                   </tr>
                 )

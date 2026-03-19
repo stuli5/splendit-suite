@@ -5,10 +5,10 @@ export default function Page() {
         🤖 SplenditBot
       </h1>
       <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: 32 }}>
-        Automatizace a AI asistent
+        Automation & AI assistant
       </p>
       <div className="glass-card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-        Modul se právě vyvíjí...
+        Module is currently in development...
       </div>
     </div>
   )

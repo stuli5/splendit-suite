@@ -87,6 +87,49 @@ cp .env.example .env.local
 | NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID | Messaging sender ID | ✓ |
 | NEXT_PUBLIC_FIREBASE_APP_ID | App ID | ✓ |
 
+## Security Rules
+
+### Autentifikácia & Autorizácia
+- **KAŽDÁ** stránka v `(platform)/` musí byť chránená — overuj `useAuth()` v layoute
+- Nikdy neukladaj citlivé dáta (tokeny, heslá) do `localStorage` ani do URL params
+- Firebase Auth token sa automaticky obnov — nespoliehaj sa na manuálny refresh
+- API routes (ak vzniknú) musia vždy verifikovať Firebase ID token na serveri
+
+### Firestore Security Rules (produkcia)
+Pred deployom na produkciu VŽDY nastaviť prísne Firestore pravidlá:
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Len prihlásený používateľ má prístup
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+V `test mode` (allow read, write: if true) nikdy nenasadzovať na produkciu.
+
+### Vstupná validácia
+- Sanitizuj všetky user inputs pred zápisom do Firestore
+- Číselné polia vždy pretypuj: `Number(value)` — nikdy neukladaj string do číselného poľa
+- Nepovinné polia ukladaj ako `undefined` (nie prázdny string) aby Firestore neplýtval miestom
+- Maximálna dĺžka textových polí — validovať na frontende aj v security rules
+
+### XSS & Injekcie
+- Nikdy nepoužívaj `dangerouslySetInnerHTML` bez sanitizácie
+- Nekonkatenuj user input priamo do Firestore query paths
+- Všetky externé URL validovať pred zobrazením (nebezpečné `javascript:` scheme)
+
+### Environmentálne premenné
+- `NEXT_PUBLIC_*` premenné sú viditeľné v klientskom kóde — neukladaj tam secrets
+- Serverové secrets (napr. Firebase Admin SDK) iba do premenných BEZ `NEXT_PUBLIC_` prefixu
+- Nikdy necommitovať `.env.local` do gitu (je v `.gitignore`)
+
+### Závislosti
+- Pravidelne spúšťaj `npm audit` a riešiť high/critical zraniteľnosti
+- Nepoužívaj zastarané alebo nespravované balíky bez revízie
+
 ## Modules
 
 | Module | Route | Status |

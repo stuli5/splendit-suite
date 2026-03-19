@@ -5,10 +5,10 @@ export default function Page() {
         👤 Kandidáti
       </h1>
       <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: 32 }}>
-        CRM — správa kandidátů a pipeline
+        CRM — candidate management & pipeline
       </p>
       <div className="glass-card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-        Modul se právě vyvíjí...
+        Module is currently in development...
       </div>
     </div>
   )

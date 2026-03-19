@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
-import { getFirestore, type Firestore } from 'firebase/firestore'
+import { initializeFirestore, type Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,7 +21,7 @@ let db: Firestore
 if (hasConfig) {
   app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig as Record<string, string>)
   auth = getAuth(app)
-  db   = getFirestore(app)
+  db   = initializeFirestore(app, { experimentalForceLongPolling: true })
 } else {
   // Stubs for build-time — will not be called client-side without real config
   app  = {} as FirebaseApp

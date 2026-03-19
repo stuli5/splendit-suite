@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createContract } from '@/lib/bodyshop'
-import type { Currency } from '@/lib/types'
+import { getCompanies } from '@/lib/companies'
+import type { Currency, Company } from '@/lib/types'
 
 interface Props {
   onClose: () => void
@@ -14,12 +15,51 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
     contractorName: '',
     clientName: '',
     startDate: new Date().toISOString().slice(0, 10),
+    endDate: '',
     mdRateContractor: '',
     mdRateClient: '',
     currency: 'CZK' as Currency,
+    invoiceDaysContractor: '30',
+    invoiceDaysClient: '30',
+    managerName: '',
+    managerRole: '',
     note: '',
   })
-  const [saving, setSaving] = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [companies,   setCompanies]   = useState<Company[]>([])
+  const [suggestions, setSuggestions] = useState<Company[]>([])
+  const [showSuggest, setShowSuggest] = useState(false)
+  const suggestRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    getCompanies().then(setCompanies)
+  }, [])
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggest(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function handleClientInput(value: string) {
+    set('clientName', value)
+    if (value.length < 1) { setSuggestions([]); setShowSuggest(false); return }
+    const matches = companies.filter(c =>
+      c.name.toLowerCase().includes(value.toLowerCase())
+    )
+    setSuggestions(matches)
+    setShowSuggest(matches.length > 0)
+  }
+
+  function selectCompany(c: Company) {
+    set('clientName', c.name)
+    setSuggestions([])
+    setShowSuggest(false)
+  }
 
   function set(key: string, value: string) {
     setForm(f => ({ ...f, [key]: value }))
@@ -29,14 +69,19 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
     e.preventDefault()
     setSaving(true)
     await createContract({
-      contractorName:   form.contractorName,
-      clientName:       form.clientName,
-      startDate:        form.startDate,
-      mdRateContractor: Number(form.mdRateContractor),
-      mdRateClient:     Number(form.mdRateClient),
-      currency:         form.currency,
-      status:           'active',
-      note:             form.note,
+      contractorName:          form.contractorName,
+      clientName:              form.clientName,
+      startDate:               form.startDate,
+      endDate:                 form.endDate || undefined,
+      mdRateContractor:        Number(form.mdRateContractor),
+      mdRateClient:            Number(form.mdRateClient),
+      currency:                form.currency,
+      status:                  'active',
+      invoiceDaysContractor:   form.invoiceDaysContractor ? Number(form.invoiceDaysContractor) : undefined,
+      invoiceDaysClient:       form.invoiceDaysClient ? Number(form.invoiceDaysClient) : undefined,
+      managerName:             form.managerName || undefined,
+      managerRole:             form.managerRole || undefined,
+      note:                    form.note,
     })
     onCreated()
   }
@@ -58,30 +103,69 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.2rem', color: 'var(--text)', marginBottom: 24 }}>
-          Nový kontrakt
+          New Contract
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Field label="KONTRAKTOR (jméno)">
-            <input value={form.contractorName} onChange={e => set('contractorName', e.target.value)} required style={inp} placeholder="Jan Novák" />
+          <Field label="CONTRACTOR (name)">
+            <input value={form.contractorName} onChange={e => set('contractorName', e.target.value)} required style={inp} placeholder="John Smith" />
           </Field>
 
-          <Field label="KLIENT (firma)">
-            <input value={form.clientName} onChange={e => set('clientName', e.target.value)} required style={inp} placeholder="Acme s.r.o." />
+          <Field label="CLIENT (company)">
+            <div ref={suggestRef} style={{ position: 'relative' }}>
+              <input
+                value={form.clientName}
+                onChange={e => handleClientInput(e.target.value)}
+                onFocus={() => form.clientName && setShowSuggest(suggestions.length > 0)}
+                required
+                style={inp}
+                placeholder="Acme s.r.o."
+                autoComplete="off"
+              />
+              {showSuggest && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                  background: 'white', border: '1px solid rgba(0,168,122,0.2)',
+                  borderRadius: 9, marginTop: 4, boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                  maxHeight: 200, overflowY: 'auto',
+                }}>
+                  {suggestions.map(c => (
+                    <div
+                      key={c.id}
+                      onMouseDown={() => selectCompany(c)}
+                      style={{
+                        padding: '9px 14px', cursor: 'pointer', fontSize: '0.82rem',
+                        borderBottom: '1px solid rgba(0,168,122,0.08)',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,168,122,0.06)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                    >
+                      <span style={{ fontWeight: 600, color: 'var(--text)' }}>{c.name}</span>
+                      {c.city && <span style={{ color: 'var(--text-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{c.city}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </Field>
 
-          <Field label="DEN NÁSTUPU">
-            <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} required style={inp} />
-          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="START DATE">
+              <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} required style={inp} />
+            </Field>
+            <Field label="END DATE">
+              <input type="date" value={form.endDate} onChange={e => set('endDate', e.target.value)} style={inp} min={form.startDate} />
+            </Field>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 10 }}>
-            <Field label="MD NÁKLAD">
+            <Field label="MD COST">
               <input type="number" value={form.mdRateContractor} onChange={e => set('mdRateContractor', e.target.value)} required style={inp} placeholder="10 000" min="0" />
             </Field>
-            <Field label="MD PRODEJ">
+            <Field label="MD RATE">
               <input type="number" value={form.mdRateClient} onChange={e => set('mdRateClient', e.target.value)} required style={inp} placeholder="15 000" min="0" />
             </Field>
-            <Field label="MĚNA">
+            <Field label="CURRENCY">
               <select value={form.currency} onChange={e => set('currency', e.target.value)} style={inp}>
                 <option value="CZK">CZK</option>
                 <option value="EUR">EUR</option>
@@ -94,12 +178,38 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
               background: margin >= 30 ? 'rgba(0,168,122,0.08)' : margin >= 15 ? 'rgba(245,158,11,0.08)' : 'rgba(224,69,122,0.08)',
               borderRadius: 9, padding: '10px 14px', fontSize: '0.8rem', textAlign: 'center',
             }}>
-              Marža: <strong style={{ color: margin >= 30 ? '#00a87a' : margin >= 15 ? '#f59e0b' : '#e0457a' }}>{margin} %</strong>
+              Margin: <strong style={{ color: margin >= 30 ? '#00a87a' : margin >= 15 ? '#f59e0b' : '#e0457a' }}>{margin} %</strong>
             </div>
           )}
 
-          <Field label="POZNÁMKA">
-            <input value={form.note} onChange={e => set('note', e.target.value)} style={inp} placeholder="Nepovinné" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="INVOICE TERMS — CONTRACTOR (days)">
+              <select value={form.invoiceDaysContractor} onChange={e => set('invoiceDaysContractor', e.target.value)} style={inp}>
+                {[7, 14, 21, 30, 45, 60, 90].map(d => (
+                  <option key={d} value={d}>{d} days</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="INVOICE TERMS — CLIENT (days)">
+              <select value={form.invoiceDaysClient} onChange={e => set('invoiceDaysClient', e.target.value)} style={inp}>
+                {[7, 14, 21, 30, 45, 60, 90].map(d => (
+                  <option key={d} value={d}>{d} days</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="MANAGER (name)">
+              <input value={form.managerName} onChange={e => set('managerName', e.target.value)} style={inp} placeholder="Jane Smith" />
+            </Field>
+            <Field label="MANAGER ROLE">
+              <input value={form.managerRole} onChange={e => set('managerRole', e.target.value)} style={inp} placeholder="Senior Recruiter" />
+            </Field>
+          </div>
+
+          <Field label="NOTE">
+            <input value={form.note} onChange={e => set('note', e.target.value)} style={inp} placeholder="Optional" />
           </Field>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
@@ -114,7 +224,7 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
                 opacity: saving ? 0.7 : 1,
               }}
             >
-              {saving ? 'Ukládám...' : 'Vytvořit kontrakt'}
+              {saving ? 'Saving...' : 'Create Contract'}
             </button>
             <button
               type="button"
@@ -125,7 +235,7 @@ export default function NewContractModal({ onClose, onCreated }: Props) {
                 cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)',
               }}
             >
-              Zrušit
+              Cancel
             </button>
           </div>
         </form>

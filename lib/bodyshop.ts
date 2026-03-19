@@ -69,6 +69,11 @@ export async function deleteWorklog(id: string): Promise<void> {
   await deleteDoc(doc(db, 'worklogs', id))
 }
 
+export async function clearAllWorklogs(): Promise<void> {
+  const snap = await getDocs(collection(db, 'worklogs'))
+  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function marginPercent(mdRateClient: number, mdRateContractor: number): number {

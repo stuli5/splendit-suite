@@ -27,7 +27,7 @@ export default function SpolecnostiPage() {
   useEffect(() => { load() }, [])
 
   async function handleDelete(c: Company) {
-    if (!confirm(`Smazat společnost „${c.name}"?`)) return
+    if (!confirm(`Delete company "${c.name}"?`)) return
     await deleteCompany(c.id)
     load()
   }
@@ -44,10 +44,10 @@ export default function SpolecnostiPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: 'var(--text)' }}>
-            🏢 Společnosti
+            🏢 Companies
           </h1>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: 4 }}>
-            Klienti, partneři a dodavatelé
+            Clients, partners & suppliers
           </p>
         </div>
         <button
@@ -59,7 +59,7 @@ export default function SpolecnostiPage() {
             fontSize: '0.85rem', cursor: 'pointer',
           }}
         >
-          + Přidat společnost
+          + Add Company
         </button>
       </div>
 
@@ -68,7 +68,7 @@ export default function SpolecnostiPage() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Hledat dle názvu, IČO nebo města..."
+          placeholder="Search by name, company ID or city..."
           style={{
             width: '100%', maxWidth: 400, padding: '10px 14px', borderRadius: 9,
             border: '1px solid rgba(0,168,122,0.2)', background: 'rgba(255,255,255,0.8)',
@@ -82,26 +82,26 @@ export default function SpolecnostiPage() {
       <div className="glass-card" style={{ overflow: 'hidden' }}>
         <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)' }}>
-            Společnosti
+            Companies
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-            {filtered.length} záznamů
+            {filtered.length} records
           </span>
         </div>
 
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Načítám...</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
             {companies.length === 0
-              ? 'Zatím žádné společnosti. Přidej první kliknutím na „+ Přidat společnost".'
-              : 'Žádné výsledky pro hledaný výraz.'}
+              ? 'No companies yet. Add the first one by clicking "+ Add Company".'
+              : 'No results for the search term.'}
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'rgba(0,168,122,0.04)' }}>
-                {['IČO', 'Název', 'Kontaktní osoby', 'Typ', 'Město', ''].map(h => (
+                {['Company ID', 'Name', 'Contact Persons', 'Type', 'City', ''].map(h => (
                   <th key={h} style={{
                     padding: '10px 16px', textAlign: 'left', fontSize: '0.68rem',
                     color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em',
@@ -132,7 +132,7 @@ export default function SpolecnostiPage() {
                           </div>
                         ))}
                         {c.contacts.length > 2 && (
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>+{c.contacts.length - 2} další</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>+{c.contacts.length - 2} more</div>
                         )}
                       </div>
                     ) : <span style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>—</span>}
@@ -156,13 +156,13 @@ export default function SpolecnostiPage() {
                         onClick={() => { setEditing(c); setShowModal(true) }}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}
                       >
-                        Upravit
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDelete(c)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#e0457a', fontWeight: 600 }}
                       >
-                        Smazat
+                        Delete
                       </button>
                     </div>
                   </td>

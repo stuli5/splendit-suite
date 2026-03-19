@@ -5,10 +5,10 @@ export default function Page() {
         📡 Deal Radar
       </h1>
       <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: 32 }}>
-        Pipeline dealy a obchodní fáze
+        Pipeline deals & stages
       </p>
       <div className="glass-card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-        Modul se právě vyvíjí...
+        Module is currently in development...
       </div>
     </div>
   )

@@ -16,6 +16,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!auth.onAuthStateChanged) {
+      setLoading(false)
+      return
+    }
     return onAuthStateChanged(auth, (u) => {
       setUser(u)
       setLoading(false)
