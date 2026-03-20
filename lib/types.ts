@@ -97,6 +97,55 @@ export interface Tribe {
   createdAt: number
 }
 
+// ─── IMS ─────────────────────────────────────────────────────────────────────
+
+export type CandidateStatus = 'pending' | 'scheduled' | 'done' | 'second' | 'hired' | 'rejected'
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'critical'
+
+export interface AnswerOption {
+  text: string
+  checked: boolean
+}
+
+export interface QuestionAnswer {
+  questionNumber: number
+  questionTitle: string
+  difficulty: Difficulty
+  points: number
+  earnedPoints: number
+  maxPoints: number
+  answers: AnswerOption[]
+}
+
+export interface CandidateRating {
+  stars: number
+  notes: string
+  status: CandidateStatus
+  ratedAt: number
+  updatedAt: number
+}
+
+export interface Candidate {
+  id: string
+  name: string
+  firstName?: string
+  lastName?: string
+  position: string
+  experience: string
+  score: number
+  totalPoints: number
+  maxPoints: number
+  easyScore: number
+  mediumScore: number
+  hardScore: number
+  criticalScore?: number
+  timestamp: number
+  finalConclusion?: string
+  conclusionUpdated?: number
+  answers?: QuestionAnswer[]
+  rating?: CandidateRating
+}
+
 // ─── Bodyshop ────────────────────────────────────────────────────────────────
 
 export interface Worklog {
