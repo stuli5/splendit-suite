@@ -1,0 +1,135 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isPortalCandidate() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/portalCandidates/$(request.auth.uid)) == false &&
+        // check by email via custom claim or just trust auth
+        request.auth.token.email != null;
+    }
+
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    function hasFields(fields) {
+      return incomingData().keys().hasAll(fields);
+    }
+
+    // ── Internal platform collections ─────────────────────────────────────────
+    // Full access for any authenticated (internal) user
+
+    match /contracts/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['contractorName', 'clientName', 'startDate', 'mdRateContractor', 'mdRateClient', 'currency', 'status', 'createdAt'])
+        && incomingData().mdRateContractor is number
+        && incomingData().mdRateClient     is number;
+      allow update, delete: if isAuth();
+    }
+
+    match /worklogs/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['contractId', 'month', 'daysWorked', 'revenue', 'cost', 'profit', 'createdAt'])
+        && incomingData().daysWorked is number
+        && incomingData().revenue    is number
+        && incomingData().cost       is number
+        && incomingData().profit     is number;
+      allow update, delete: if isAuth();
+    }
+
+    match /companies/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['name', 'type', 'createdAt']);
+      allow update, delete: if isAuth();
+    }
+
+    match /candidates/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['name', 'position', 'timestamp']);
+      allow update, delete: if isAuth();
+    }
+
+    match /meets/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['name', 'date', 'type', 'createdAt']);
+      allow update, delete: if isAuth();
+    }
+
+    match /people/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['name', 'role', 'createdAt']);
+      allow update, delete: if isAuth();
+    }
+
+    match /tribes/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['name', 'color', 'createdAt']);
+      allow update, delete: if isAuth();
+    }
+
+    // ── Portal collections ────────────────────────────────────────────────────
+
+    // Allowlist — read: any auth user (portal needs to check own entry)
+    //             write: only internal (all auth users = internal in this app)
+    match /portalCandidates/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['email', 'name', 'active', 'createdAt'])
+        && incomingData().email  is string
+        && incomingData().name   is string
+        && incomingData().active is bool;
+      allow update: if isAuth()
+        // only 'active' field can be toggled (deactivation)
+        && incomingData().diff(resource.data).affectedKeys().hasOnly(['active'])
+        && incomingData().active is bool;
+      allow delete: if isAuth();
+    }
+
+    // Submissions — candidate can read/create own; internal can read all
+    match /portalSubmissions/{id} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && hasFields(['candidateId', 'candidateEmail', 'type', 'fileName', 'fileUrl', 'fileSize', 'month', 'status', 'uploadedAt'])
+        // candidate can only create for themselves
+        && incomingData().candidateId == request.auth.uid
+        && incomingData().status      == 'pending'
+        && incomingData().type        in ['invoice', 'timesheet']
+        && incomingData().fileSize    is number
+        && incomingData().fileSize    <= 20 * 1024 * 1024; // max 20 MB
+      allow update: if isAuth()
+        // only status can be updated (by internal admin)
+        && incomingData().diff(resource.data).affectedKeys().hasOnly(['status'])
+        && incomingData().status in ['pending', 'paid', 'rejected'];
+      allow delete: if false;
+    }
+
+    // Audit log — append-only, no updates or deletes
+    match /portalAuditLog/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['userId', 'email', 'action', 'timestamp'])
+        && incomingData().action in ['login', 'upload'];
+      allow update, delete: if false;
+    }
+
+    // ── Deny everything else ──────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

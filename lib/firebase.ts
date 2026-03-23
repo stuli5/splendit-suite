@@ -1,6 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
 import { initializeFirestore, type Firestore } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,17 +18,20 @@ const hasConfig = !!firebaseConfig.apiKey && !!firebaseConfig.projectId
 let app: FirebaseApp
 let auth: Auth
 let db: Firestore
+let storage: FirebaseStorage
 
 if (hasConfig) {
-  app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig as Record<string, string>)
-  auth = getAuth(app)
-  db   = initializeFirestore(app, { experimentalForceLongPolling: true })
+  app     = getApps().length ? getApps()[0] : initializeApp(firebaseConfig as Record<string, string>)
+  auth    = getAuth(app)
+  db      = initializeFirestore(app, { experimentalForceLongPolling: true })
+  storage = getStorage(app)
 } else {
   // Stubs for build-time — will not be called client-side without real config
-  app  = {} as FirebaseApp
-  auth = {} as Auth
-  db   = {} as Firestore
+  app     = {} as FirebaseApp
+  auth    = {} as Auth
+  db      = {} as Firestore
+  storage = {} as FirebaseStorage
 }
 
-export { auth, db }
+export { auth, db, storage }
 export default app

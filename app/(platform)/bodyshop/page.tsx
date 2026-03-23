@@ -61,6 +61,15 @@ export default function BodyshopPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          <Link href="/bodyshop/portal-candidates" style={{
+            padding: '10px 18px', borderRadius: 9,
+            border: '1px solid rgba(0,145,199,0.3)', background: 'rgba(0,145,199,0.06)',
+            color: 'var(--secondary)', fontFamily: 'Syne, sans-serif', fontWeight: 700,
+            fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'none',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            Portal Candidates
+          </Link>
           <button
             onClick={async () => {
               if (!confirm('Delete all revenue, cost and profit records? Contracts will be preserved.')) return
