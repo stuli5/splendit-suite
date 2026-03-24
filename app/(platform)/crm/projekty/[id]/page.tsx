@@ -361,7 +361,9 @@ function CandidateCard({
   const [hovered, setHovered] = useState(false)
   const color    = PHASE_COLORS[pc.phase]
   const fit      = fitScores[pc.candidateId]
-  const fitColor = fit ? (fit.score >= 80 ? '#00a87a' : fit.score >= 60 ? '#f59e0b' : '#e0457a') : null
+  const fitColor = fit
+    ? fit.score >= 80 ? '#00a87a' : fit.score >= 60 ? '#f59e0b' : '#e0457a'
+    : null
 
   return (
     <div
@@ -370,52 +372,90 @@ function CandidateCard({
       onDragEnd={onDragEnd}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background: 'white',
-        borderRadius: 10,
-        borderTop:    `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
-        borderRight:  `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
-        borderBottom: `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
-        borderLeft:   `3px solid ${color}`,
-        boxShadow: isDragging
-          ? '0 12px 32px rgba(0,0,0,0.18)'
-          : hovered
-            ? `0 4px 16px ${color}20`
-            : '0 1px 4px rgba(0,0,0,0.06)',
-        cursor: isDragging ? 'grabbing' : 'pointer',
-        opacity: isDragging ? 0.5 : 1,
-        transition: 'box-shadow 0.15s, border-color 0.15s, transform 0.1s',
-        transform: hovered && !isDragging ? 'translateY(-1px)' : 'none',
-        overflow: 'hidden',
-      }}
       onClick={onClick}
+      style={{
+        background: '#fff',
+        borderRadius: 8,
+        border: '1px solid rgba(0,0,0,0.08)',
+        boxShadow: isDragging
+          ? '0 16px 40px rgba(0,0,0,0.16)'
+          : hovered
+            ? '0 4px 20px rgba(0,0,0,0.10)'
+            : '0 1px 3px rgba(0,0,0,0.06)',
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        opacity: isDragging ? 0.45 : 1,
+        transform: hovered && !isDragging ? 'translateY(-2px)' : 'none',
+        transition: 'box-shadow 0.18s, transform 0.14s, border-color 0.18s',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
     >
-      <div style={{ padding: '10px 12px' }}>
-        {/* Top row: avatar + name + fit score */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: pc.note ? 8 : 0 }}>
+      {/* Phase accent bar — full-width top */}
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${color}, ${color}99)` }} />
+
+      {/* Drag handle — visible on hover */}
+      {hovered && !isDragging && (
+        <div style={{
+          position: 'absolute', top: '50%', right: 8,
+          transform: 'translateY(-50%)',
+          color: 'rgba(0,0,0,0.18)', fontSize: '0.7rem',
+          letterSpacing: '-1px', lineHeight: 1, userSelect: 'none',
+          pointerEvents: 'none',
+        }}>
+          ⠿
+        </div>
+      )}
+
+      {/* Main content */}
+      <div style={{ padding: '10px 12px 8px' }}>
+
+        {/* Row 1: avatar + name + score */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          {/* Avatar */}
           <div style={{
-            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-            background: `linear-gradient(135deg, ${color}, ${color}88)`,
+            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+            background: `linear-gradient(135deg, ${color}dd, ${color}77)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.72rem', fontWeight: 800, color: 'white',
+            fontSize: '0.78rem', fontWeight: 800, color: 'white',
+            letterSpacing: '-0.5px',
+            boxShadow: `0 2px 8px ${color}40`,
           }}>
             {pc.candidateFirstName[0]}{pc.candidateLastName[0]}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+          {/* Name + position */}
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
+            <div style={{
+              fontSize: '0.82rem', fontWeight: 700,
+              color: 'var(--text)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              lineHeight: 1.3,
+            }}>
               {pc.candidateFirstName} {pc.candidateLastName}
             </div>
-            <div style={{ fontSize: '0.67rem', color: 'var(--text-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{
+              fontSize: '0.68rem', color: 'var(--text-dim)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              marginTop: 2, lineHeight: 1.3,
+            }}>
               {pc.candidatePosition}
             </div>
           </div>
-          {fit && (
+
+          {/* Fit score badge */}
+          {fit && fitColor && (
             <div style={{
-              flexShrink: 0, width: 32, height: 32, borderRadius: 8,
-              background: `${fitColor}15`, border: `1.5px solid ${fitColor}40`,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, textAlign: 'center',
+              background: `${fitColor}12`,
+              border: `1.5px solid ${fitColor}35`,
+              borderRadius: 7, padding: '3px 7px', minWidth: 34,
             }}>
-              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: fitColor!, lineHeight: 1 }}>{fit.score}</span>
+              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: fitColor, lineHeight: 1 }}>
+                {fit.score}
+              </div>
+              <div style={{ fontSize: '0.52rem', fontWeight: 700, color: fitColor, letterSpacing: '0.02em', marginTop: 1 }}>
+                {fit.label.toUpperCase()}
+              </div>
             </div>
           )}
         </div>
@@ -423,33 +463,71 @@ function CandidateCard({
         {/* Note preview */}
         {pc.note && (
           <div style={{
-            fontSize: '0.68rem', color: 'var(--text-dim)', lineHeight: 1.4,
-            overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
-            marginBottom: 6,
+            marginTop: 9,
+            padding: '6px 9px',
+            background: 'rgba(0,0,0,0.025)',
+            borderRadius: 6,
+            borderLeft: `2px solid ${color}50`,
           }}>
-            {pc.note}
+            <div style={{
+              fontSize: '0.67rem', color: 'var(--text-muted)', lineHeight: 1.5,
+              fontStyle: 'italic',
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+            }}>
+              {pc.note}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Footer: links + date */}
+      {/* Footer */}
       <div style={{
-        padding: '6px 12px 8px',
-        borderTop: `1px solid ${color}15`,
+        padding: '5px 12px 8px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderTop: '1px solid rgba(0,0,0,0.05)',
+        marginTop: 2,
       }}>
-        <div style={{ display: 'flex', gap: 5 }}>
+        {/* Profile badges */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           {pc.linkedIn && (
-            <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#0077b5', background: '#0077b510', padding: '2px 7px', borderRadius: 4 }}>in</span>
+            <span style={{
+              fontSize: '0.6rem', fontWeight: 700,
+              color: '#0077b5', background: 'rgba(0,119,181,0.08)',
+              padding: '2px 6px', borderRadius: 4,
+              letterSpacing: '0.02em',
+            }}>
+              in
+            </span>
           )}
           {pc.gitHub && (
-            <span style={{ fontSize: '0.68rem', color: '#24292e', background: '#24292e10', padding: '2px 6px', borderRadius: 4 }}>🐙</span>
+            <span style={{
+              fontSize: '0.62rem',
+              color: '#24292e', background: 'rgba(36,41,46,0.07)',
+              padding: '2px 5px', borderRadius: 4,
+            }}>
+              GH
+            </span>
+          )}
+          {!pc.linkedIn && !pc.gitHub && (
+            <span style={{ fontSize: '0.6rem', color: 'rgba(0,0,0,0.2)' }}>—</span>
           )}
         </div>
-        <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)' }}>
-          {timeAgo(pc.addedAt)}
-        </span>
+
+        {/* Date + open indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: '0.6rem', color: 'rgba(0,0,0,0.3)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {timeAgo(pc.addedAt)}
+          </span>
+          <span style={{
+            fontSize: '0.6rem',
+            color: hovered ? color : 'rgba(0,0,0,0.2)',
+            transition: 'color 0.15s',
+            fontWeight: 700,
+          }}>
+            ›
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -706,13 +784,16 @@ export default function ProjectDetailPage() {
       {/* Pipeline board */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${orderedPhases.length}, minmax(210px, 1fr))`,
-        gap: 12, overflowX: 'auto', paddingBottom: 8,
+        gridTemplateColumns: `repeat(${orderedPhases.length}, minmax(220px, 1fr))`,
+        gap: 10, overflowX: 'auto', paddingBottom: 8, alignItems: 'start',
       }}>
         {orderedPhases.map(phase => {
           const phaseCandidates = pcList.filter(p => p.phase === phase)
           const isDragTarget    = dragOver === phase
           const color           = PHASE_COLORS[phase]
+          const fillPct         = project.requiredCount > 0
+            ? Math.min(100, Math.round((phaseCandidates.length / project.requiredCount) * 100))
+            : null
 
           return (
             <div
@@ -721,27 +802,57 @@ export default function ProjectDetailPage() {
               onDragLeave={() => setDragOver(null)}
               onDrop={() => handleDrop(phase)}
               style={{
-                background: isDragTarget ? `${color}08` : 'rgba(248,252,250,0.8)',
-                backdropFilter: 'blur(12px)',
-                border: `1.5px solid ${isDragTarget ? color + '60' : color + '25'}`,
-                borderRadius: 12,
-                minHeight: 340,
+                background: isDragTarget ? `${color}06` : 'rgba(246,249,248,0.9)',
+                border: `1px solid ${isDragTarget ? color + '50' : 'rgba(0,0,0,0.07)'}`,
+                borderRadius: 10,
+                minHeight: 320,
                 display: 'flex', flexDirection: 'column',
-                transition: 'all 0.15s',
+                transition: 'border-color 0.15s, background 0.15s',
               }}
             >
               {/* Column header */}
-              <div style={{ padding: '12px 14px', borderBottom: `2px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color, letterSpacing: '0.05em', fontFamily: 'Syne, sans-serif' }}>
-                  {PHASE_LABELS[phase].toUpperCase()}
-                </span>
-                <span style={{ fontSize: '0.68rem', fontWeight: 600, background: `${color}18`, color, padding: '2px 8px', borderRadius: 20 }}>
-                  {phaseCandidates.length}
-                </span>
+              <div style={{ padding: '12px 12px 10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: color, flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontSize: '0.68rem', fontWeight: 700, color: 'rgba(0,0,0,0.5)',
+                      letterSpacing: '0.08em', fontFamily: 'JetBrains Mono, monospace',
+                    }}>
+                      {PHASE_LABELS[phase].toUpperCase()}
+                    </span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.7rem', fontWeight: 700,
+                    background: `${color}18`, color,
+                    padding: '2px 9px', borderRadius: 20,
+                    minWidth: 24, textAlign: 'center',
+                  }}>
+                    {phaseCandidates.length}
+                  </span>
+                </div>
+
+                {/* Fill bar */}
+                {fillPct !== null && (
+                  <div style={{ height: 3, background: 'rgba(0,0,0,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 2,
+                      width: `${fillPct}%`,
+                      background: fillPct >= 100 ? color : `${color}80`,
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                )}
               </div>
 
+              {/* Divider */}
+              <div style={{ height: 1, background: `${color}25`, margin: '0 12px' }} />
+
               {/* Cards */}
-              <div style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ flex: 1, padding: '8px 8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {phaseCandidates.map(pc => (
                   <CandidateCard
                     key={pc.id}
@@ -754,20 +865,30 @@ export default function ProjectDetailPage() {
                   />
                 ))}
 
+                {/* Add button */}
                 <button
                   onClick={() => setAddPhase(phase)}
                   style={{
-                    width: '100%', padding: '7px', borderRadius: 8, cursor: 'pointer',
-                    border: `1.5px dashed ${color}35`,
-                    background: 'transparent', color,
-                    fontSize: '0.72rem', fontWeight: 600,
-                    marginTop: phaseCandidates.length > 0 ? 2 : 'auto',
-                    transition: 'background 0.15s',
+                    width: '100%', padding: '7px 0', borderRadius: 7, cursor: 'pointer',
+                    border: `1px dashed rgba(0,0,0,0.13)`,
+                    background: 'transparent',
+                    color: 'rgba(0,0,0,0.3)',
+                    fontSize: '0.72rem', fontWeight: 500,
+                    marginTop: phaseCandidates.length > 0 ? 2 : 0,
+                    transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = `${color}08`)}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = color
+                    e.currentTarget.style.color = color
+                    e.currentTarget.style.background = `${color}06`
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(0,0,0,0.13)'
+                    e.currentTarget.style.color = 'rgba(0,0,0,0.3)'
+                    e.currentTarget.style.background = 'transparent'
+                  }}
                 >
-                  + Add candidate
+                  + Add
                 </button>
               </div>
             </div>
