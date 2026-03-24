@@ -16,6 +16,10 @@ export async function updateCandidatePhase(id: string, phase: ProjectPhase): Pro
   await updateDoc(doc(db, 'projectCandidates', id), { phase })
 }
 
+export async function updateProjectCandidate(id: string, data: Partial<ProjectCandidate>): Promise<void> {
+  await updateDoc(doc(db, 'projectCandidates', id), data)
+}
+
 export async function removeCandidateFromProject(id: string): Promise<void> {
   await deleteDoc(doc(db, 'projectCandidates', id))
 }
