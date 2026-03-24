@@ -26,6 +26,37 @@ export interface Company {
   createdAt: number
 }
 
+// ─── CRM Candidates ──────────────────────────────────────────────────────────
+
+export interface CRMCandidate {
+  id:        string
+  firstName: string
+  lastName:  string
+  position:  string
+  linkedIn?: string
+  gitHub?:   string
+  email?:    string
+  phone?:    string
+  note?:     string
+  createdAt: number
+}
+
+// ─── Project Candidates (pipeline) ───────────────────────────────────────────
+
+export interface ProjectCandidate {
+  id:                string
+  projectId:         string
+  candidateId:       string
+  candidateFirstName: string
+  candidateLastName:  string
+  candidatePosition:  string
+  linkedIn?:         string
+  gitHub?:           string
+  phase:             ProjectPhase
+  note?:             string
+  addedAt:           number
+}
+
 // ─── Bodyshop ────────────────────────────────────────────────────────────────
 
 export type ContractStatus = 'active' | 'ended'
@@ -97,6 +128,37 @@ export interface Tribe {
   createdAt: number
 }
 
+// ─── Projects ────────────────────────────────────────────────────────────────
+
+export type ProjectPhase =
+  | 'contacted'
+  | 'presentation'
+  | 'interview'
+  | 'rejected'
+  | 'onboarding'
+  | 'closed'
+
+export type ProjectType        = 'recruitment' | 'contracting' | 'other'
+export type ProjectStatus      = 'active' | 'on-hold' | 'closed'
+export type CooperationType    = 'HPP' | 'BS' | 'both'
+
+export interface Project {
+  id:              string
+  positionName:    string
+  companyId:       string
+  companyName:     string
+  phases:          ProjectPhase[]
+  type:            ProjectType
+  status:          ProjectStatus
+  cooperationType: CooperationType
+  salary?:         string
+  requiredCount:   number
+  responsible?:    string
+  description?:    string
+  jobDescription?: string
+  createdAt:       number
+}
+
 // ─── IMS ─────────────────────────────────────────────────────────────────────
 
 export type CandidateStatus = 'pending' | 'scheduled' | 'done' | 'second' | 'hired' | 'rejected'
@@ -144,6 +206,37 @@ export interface Candidate {
   conclusionUpdated?: number
   answers?: QuestionAnswer[]
   rating?: CandidateRating
+}
+
+// ─── Deal Radar ──────────────────────────────────────────────────────────────
+
+export type DealStage =
+  | 'lead'
+  | 'qualified'
+  | 'proposal'
+  | 'search'
+  | 'offer'
+  | 'won'
+  | 'lost'
+
+export type FeeType = 'percentage' | 'fixed'
+export type DealCurrency = 'CZK' | 'EUR'
+
+export interface Deal {
+  id:           string
+  title:        string          // position name
+  companyId?:   string
+  companyName:  string
+  stage:        DealStage
+  feeType:      FeeType
+  feeValue:     number          // % or fixed amount
+  salaryCzk?:   number          // annual salary estimate (for % deals)
+  currency:     DealCurrency
+  probability:  number          // 0-100
+  expectedClose?: string        // YYYY-MM-DD
+  responsible?: string
+  note?:        string
+  createdAt:    number
 }
 
 // ─── Bodyshop ────────────────────────────────────────────────────────────────

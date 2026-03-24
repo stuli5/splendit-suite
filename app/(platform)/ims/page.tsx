@@ -414,11 +414,49 @@ function AnswerDetail({ answers }: { answers: QuestionAnswer[] }) {
 // ─── Candidate Card ───────────────────────────────────────────────────────────
 
 function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefresh: () => void }) {
-  const [showComment, setShowComment]   = useState(false)
-  const [showRating, setShowRating]     = useState(false)
-  const [showAnswers, setShowAnswers]   = useState(false)
-  const [answers, setAnswers]           = useState<QuestionAnswer[] | null>(null)
+  const [showComment,    setShowComment]    = useState(false)
+  const [showRating,     setShowRating]     = useState(false)
+  const [showAnswers,    setShowAnswers]    = useState(false)
+  const [showAi,         setShowAi]         = useState(false)
+  const [answers,        setAnswers]        = useState<QuestionAnswer[] | null>(null)
   const [loadingAnswers, setLoadingAnswers] = useState(false)
+  const [aiAssessment,   setAiAssessment]   = useState<string | null>(null)
+  const [aiQuestions,    setAiQuestions]    = useState<{ question: string; category: string; hint: string }[] | null>(null)
+  const [loadingAi,      setLoadingAi]      = useState(false)
+
+  async function loadAiFeatures() {
+    if (aiAssessment) { setShowAi(v => !v); return }
+    setLoadingAi(true)
+    setShowAi(true)
+    // AI Assessment
+    const assessRes = await fetch('/api/ai/ims-assessment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:        candidate.name,
+        position:    candidate.position,
+        experience:  candidate.experience,
+        score:       candidate.score,
+        easyScore:   candidate.easyScore,
+        mediumScore: candidate.mediumScore,
+        hardScore:   candidate.hardScore,
+        conclusion:  candidate.finalConclusion,
+      }),
+    })
+    const assessJson = await assessRes.json()
+    if (assessJson.assessment) setAiAssessment(assessJson.assessment)
+
+    // AI follow-up questions
+    const qRes  = await fetch('/api/ai/interview-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ position: candidate.position, difficulty: 'medium', count: 4 }),
+    })
+    const qJson = await qRes.json()
+    if (qJson.questions) setAiQuestions(qJson.questions)
+
+    setLoadingAi(false)
+  }
 
   const hasComment = !!candidate.finalConclusion?.trim()
   const hasRating  = !!candidate.rating?.stars
@@ -488,11 +526,14 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
           <IconBtn active={hasAnswers && showAnswers} title="Answer detail" onClick={loadAnswers}>
             {loadingAnswers ? '…' : '📋'}
           </IconBtn>
-          <IconBtn active={hasComment || showComment} title="Final conclusion" onClick={() => { setShowComment(v => !v); setShowRating(false) }}>
+          <IconBtn active={hasComment || showComment} title="Final conclusion" onClick={() => { setShowComment(v => !v); setShowRating(false); setShowAi(false) }}>
             💬
           </IconBtn>
-          <IconBtn active={hasRating || showRating} title="Rate candidate" onClick={() => { setShowRating(v => !v); setShowComment(false) }}>
+          <IconBtn active={hasRating || showRating} title="Rate candidate" onClick={() => { setShowRating(v => !v); setShowComment(false); setShowAi(false) }}>
             ⭐
+          </IconBtn>
+          <IconBtn active={showAi} title="AI Assessment & Questions" onClick={() => { loadAiFeatures(); setShowComment(false); setShowRating(false) }}>
+            {loadingAi ? '…' : '✨'}
           </IconBtn>
           <IconBtn title="Delete candidate" onClick={deleteCandidate}>
             🗑
@@ -526,6 +567,49 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
           updatedAt={candidate.conclusionUpdated}
           onSave={() => { onRefresh(); setShowComment(false) }}
         />
+      )}
+      {showAi && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          {loadingAi ? (
+            <div style={{ fontSize: '0.8rem', color: '#6b46a8', fontWeight: 600 }}>✨ Analyzing candidate...</div>
+          ) : (
+            <>
+              {aiAssessment && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#6b46a8', marginBottom: 8 }}>✨ AI Assessment</div>
+                  <div style={{
+                    background: 'rgba(107,70,168,0.08)', border: '1px solid rgba(107,70,168,0.2)',
+                    borderRadius: 10, padding: '12px 16px',
+                    fontSize: '0.8rem', color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap',
+                  }}>
+                    {aiAssessment}
+                  </div>
+                </div>
+              )}
+              {aiQuestions && aiQuestions.length > 0 && (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#6b46a8', marginBottom: 8 }}>✨ Suggested Follow-up Questions</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {aiQuestions.map((q, i) => (
+                      <div key={i} style={{
+                        background: 'rgba(107,70,168,0.05)', border: '1px solid rgba(107,70,168,0.15)',
+                        borderRadius: 9, padding: '10px 14px',
+                      }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#6b46a8', background: 'rgba(107,70,168,0.15)', padding: '2px 8px', borderRadius: 10 }}>
+                            {q.category}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{q.question}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>💡 {q.hint}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
       {showRating && (
         <RatingSection

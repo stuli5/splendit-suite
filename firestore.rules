@@ -25,62 +25,19 @@ service cloud.firestore {
     }
 
     // ── Internal platform collections ─────────────────────────────────────────
-    // Full access for any authenticated (internal) user
+    // Full read/write access for any authenticated (internal) user
 
-    match /contracts/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['contractorName', 'clientName', 'startDate', 'mdRateContractor', 'mdRateClient', 'currency', 'status', 'createdAt'])
-        && incomingData().mdRateContractor is number
-        && incomingData().mdRateClient     is number;
-      allow update, delete: if isAuth();
-    }
-
-    match /worklogs/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['contractId', 'month', 'daysWorked', 'revenue', 'cost', 'profit', 'createdAt'])
-        && incomingData().daysWorked is number
-        && incomingData().revenue    is number
-        && incomingData().cost       is number
-        && incomingData().profit     is number;
-      allow update, delete: if isAuth();
-    }
-
-    match /companies/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['name', 'type', 'createdAt']);
-      allow update, delete: if isAuth();
-    }
-
-    match /candidates/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['name', 'position', 'timestamp']);
-      allow update, delete: if isAuth();
-    }
-
-    match /meets/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['name', 'date', 'type', 'createdAt']);
-      allow update, delete: if isAuth();
-    }
-
-    match /people/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['name', 'role', 'createdAt']);
-      allow update, delete: if isAuth();
-    }
-
-    match /tribes/{id} {
-      allow read:   if isAuth();
-      allow create: if isAuth()
-        && hasFields(['name', 'color', 'createdAt']);
-      allow update, delete: if isAuth();
-    }
+    match /contracts/{id}          { allow read, write: if isAuth(); }
+    match /worklogs/{id}           { allow read, write: if isAuth(); }
+    match /companies/{id}          { allow read, write: if isAuth(); }
+    match /candidates/{id}         { allow read, write: if isAuth(); }
+    match /meets/{id}              { allow read, write: if isAuth(); }
+    match /people/{id}             { allow read, write: if isAuth(); }
+    match /tribes/{id}             { allow read, write: if isAuth(); }
+    match /projects/{id}           { allow read, write: if isAuth(); }
+    match /crmCandidates/{id}      { allow read, write: if isAuth(); }
+    match /projectCandidates/{id}  { allow read, write: if isAuth(); }
+    match /deals/{id}              { allow read, write: if isAuth(); }
 
     // ── Portal collections ────────────────────────────────────────────────────
 

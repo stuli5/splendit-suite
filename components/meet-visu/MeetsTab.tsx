@@ -231,7 +231,29 @@ interface DetailProps {
 }
 
 function MeetDetail({ meet, people, tribes, onBack, onEdit, onDelete, onToggleAction, onReload }: DetailProps) {
-  const [editing, setEditing] = useState(false)
+  const [editing,    setEditing]    = useState(false)
+  const [summarizing, setSummarizing] = useState(false)
+  const [aiSummary,  setAiSummary]  = useState<{
+    summary: string
+    keyDecisions: string[]
+    actionItems: { task: string; assignee: string; deadline: string }[]
+    sentiment: string
+    nextSteps: string
+  } | null>(null)
+
+  async function handleAiSummary() {
+    if (!meet.transcript?.trim()) return alert('Add a transcript first.')
+    setSummarizing(true)
+    const res  = await fetch('/api/ai/meeting-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript: meet.transcript, agenda: meet.agenda, meetName: meet.name }),
+    })
+    const json = await res.json()
+    if (json.summary) setAiSummary(json)
+    setSummarizing(false)
+  }
+
   const actions  = parseActions(meet.actions || '')
   const pList    = meet.participants ? meet.participants.split(',').map(s => s.trim()).filter(Boolean) : []
   const dateStr  = meet.date ? new Date(meet.date + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
@@ -265,8 +287,15 @@ function MeetDetail({ meet, people, tribes, onBack, onEdit, onDelete, onToggleAc
               {pList.length > 0 && <span>👥 {pList.length} participants</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={onEdit} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(0,168,122,0.3)', background: 'rgba(0,168,122,0.06)', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+            <button
+              onClick={handleAiSummary}
+              disabled={summarizing}
+              style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: summarizing ? 'rgba(107,70,168,0.15)' : 'rgba(107,70,168,0.12)', color: '#6b46a8', fontSize: '0.78rem', fontWeight: 700, cursor: summarizing ? 'not-allowed' : 'pointer' }}
+            >
+              {summarizing ? '✨ Summarizing...' : '✨ AI Summary'}
+            </button>
+            <button onClick={() => setEditing(true)} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(0,168,122,0.3)', background: 'rgba(0,168,122,0.06)', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
               Edit
             </button>
             <button onClick={onDelete} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(224,69,122,0.3)', background: 'rgba(224,69,122,0.06)', color: '#e0457a', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -275,6 +304,45 @@ function MeetDetail({ meet, people, tribes, onBack, onEdit, onDelete, onToggleAc
           </div>
         </div>
       </div>
+
+      {/* AI Summary panel */}
+      {aiSummary && (
+        <div style={{ background: 'rgba(107,70,168,0.06)', border: '1.5px solid rgba(107,70,168,0.2)', borderRadius: 12, padding: '20px 24px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: '#6b46a8' }}>✨ AI Summary</span>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{
+                fontSize: '0.7rem', fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+                background: aiSummary.sentiment === 'Positive' ? '#00a87a18' : aiSummary.sentiment === 'Negative' ? '#e0457a18' : '#f59e0b18',
+                color: aiSummary.sentiment === 'Positive' ? '#00a87a' : aiSummary.sentiment === 'Negative' ? '#e0457a' : '#f59e0b',
+              }}>
+                {aiSummary.sentiment}
+              </span>
+              <button onClick={() => setAiSummary(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-dim)', fontSize: '0.8rem' }}>✕</button>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text)', marginBottom: 12, lineHeight: 1.6 }}>{aiSummary.summary}</p>
+          {aiSummary.keyDecisions.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6b46a8', letterSpacing: '0.05em', marginBottom: 6 }}>KEY DECISIONS</div>
+              {aiSummary.keyDecisions.map((d, i) => (
+                <div key={i} style={{ fontSize: '0.78rem', color: 'var(--text)', marginBottom: 3 }}>• {d}</div>
+              ))}
+            </div>
+          )}
+          {aiSummary.actionItems.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6b46a8', letterSpacing: '0.05em', marginBottom: 6 }}>AI ACTION ITEMS</div>
+              {aiSummary.actionItems.map((a, i) => (
+                <div key={i} style={{ fontSize: '0.78rem', color: 'var(--text)', marginBottom: 3 }}>
+                  • {a.task} <span style={{ color: 'var(--text-dim)' }}>— {a.assignee}{a.deadline !== 'TBD' ? ` · ${a.deadline}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ fontSize: '0.78rem', color: '#6b46a8', fontWeight: 600 }}>→ {aiSummary.nextSteps}</div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
