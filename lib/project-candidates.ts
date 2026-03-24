@@ -1,4 +1,4 @@
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, arrayUnion } from 'firebase/firestore'
 import { db } from './firebase'
 import type { ProjectCandidate, ProjectPhase } from './types'
 
@@ -8,12 +8,19 @@ export async function getProjectCandidates(projectId: string): Promise<ProjectCa
 }
 
 export async function addCandidateToProject(data: Omit<ProjectCandidate, 'id' | 'addedAt'>): Promise<string> {
-  const ref = await addDoc(collection(db, 'projectCandidates'), { ...data, addedAt: Date.now() })
+  const ref = await addDoc(collection(db, 'projectCandidates'), {
+    ...data,
+    addedAt: Date.now(),
+    phaseHistory: [{ phase: data.phase, ts: Date.now() }],
+  })
   return ref.id
 }
 
 export async function updateCandidatePhase(id: string, phase: ProjectPhase): Promise<void> {
-  await updateDoc(doc(db, 'projectCandidates', id), { phase })
+  await updateDoc(doc(db, 'projectCandidates', id), {
+    phase,
+    phaseHistory: arrayUnion({ phase, ts: Date.now() }),
+  })
 }
 
 export async function updateProjectCandidate(id: string, data: Partial<ProjectCandidate>): Promise<void> {

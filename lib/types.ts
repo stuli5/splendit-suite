@@ -43,6 +43,11 @@ export interface CRMCandidate {
 
 // ─── Project Candidates (pipeline) ───────────────────────────────────────────
 
+export interface PhaseHistoryEntry {
+  phase: ProjectPhase
+  ts:    number
+}
+
 export interface ProjectCandidate {
   id:                string
   projectId:         string
@@ -53,6 +58,7 @@ export interface ProjectCandidate {
   linkedIn?:         string
   gitHub?:           string
   phase:             ProjectPhase
+  phaseHistory?:     PhaseHistoryEntry[]
   note?:             string
   addedAt:           number
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getCompanies } from '@/lib/companies'
 import { createProject, updateProject } from '@/lib/projects'
 import type { Company } from '@/lib/types'
@@ -95,10 +95,35 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
     setCompanyDropdown(false)
   }
 
-  function togglePhase(phase: ProjectPhase) {
-    setPhases(prev =>
-      prev.includes(phase) ? prev.filter(p => p !== phase) : [...prev, phase]
-    )
+  const dragPhaseIdx = useRef<number | null>(null)
+
+  function addPhase(phase: ProjectPhase) {
+    setPhases(prev => prev.includes(phase) ? prev : [...prev, phase])
+  }
+
+  function removePhase(phase: ProjectPhase) {
+    setPhases(prev => prev.filter(p => p !== phase))
+  }
+
+  function onPhaseDragStart(idx: number) {
+    dragPhaseIdx.current = idx
+  }
+
+  function onPhaseDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    const fromIdx = dragPhaseIdx.current
+    if (fromIdx === null || fromIdx === idx) return
+    dragPhaseIdx.current = idx
+    setPhases(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(idx, 0, moved)
+      return next
+    })
+  }
+
+  function onPhaseDragEnd() {
+    dragPhaseIdx.current = null
   }
 
   async function handleSave() {
@@ -213,29 +238,74 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
           {/* Project Phases */}
           <div>
             <label style={LABEL_STYLE}>PROJECT PHASES *</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {ALL_PHASES.map(p => {
-                const active = phases.includes(p.value)
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 8 }}>
+              Drag to reorder · click ✕ to remove
+            </div>
+
+            {/* Selected phases — draggable */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 36, marginBottom: 10 }}>
+              {phases.map((ph, idx) => {
+                const c = PHASE_COLORS[ph]
+                const label = ALL_PHASES.find(p => p.value === ph)?.label ?? ph
                 return (
+                  <div
+                    key={ph}
+                    draggable
+                    onDragStart={() => onPhaseDragStart(idx)}
+                    onDragOver={e => onPhaseDragOver(e, idx)}
+                    onDragEnd={onPhaseDragEnd}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '5px 10px 5px 8px', borderRadius: 20, cursor: 'grab',
+                      border: `1.5px solid ${c}`,
+                      background: `${c}14`,
+                      userSelect: 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.72rem', color: `${c}99`, letterSpacing: '0.05em' }}>⠿</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: c }}>{label}</span>
+                    <button
+                      type="button"
+                      onClick={() => removePhase(ph)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: c, fontSize: '0.7rem', padding: 0, lineHeight: 1, opacity: 0.6,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              })}
+              {phases.length === 0 && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', padding: '5px 0' }}>
+                  No phases selected
+                </span>
+              )}
+            </div>
+
+            {/* Unselected phases — add buttons */}
+            {ALL_PHASES.filter(p => !phases.includes(p.value)).length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {ALL_PHASES.filter(p => !phases.includes(p.value)).map(p => (
                   <button
                     key={p.value}
                     type="button"
-                    onClick={() => togglePhase(p.value)}
+                    onClick={() => addPhase(p.value)}
                     style={{
-                      padding: '5px 14px', borderRadius: 20, cursor: 'pointer',
-                      fontSize: '0.78rem', fontWeight: 600,
-                      border: `1.5px solid ${PHASE_COLORS[p.value]}`,
-                      background: active ? `${PHASE_COLORS[p.value]}18` : 'transparent',
-                      color: active ? PHASE_COLORS[p.value] : 'var(--text-dim)',
-                      transition: 'all 0.15s',
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '4px 12px', borderRadius: 20, cursor: 'pointer',
+                      border: `1px dashed ${PHASE_COLORS[p.value]}60`,
+                      background: 'transparent',
+                      color: `${PHASE_COLORS[p.value]}80`,
+                      fontSize: '0.75rem', fontWeight: 600,
                     }}
                   >
-                    {active && <span style={{ marginRight: 5 }}>✕</span>}
-                    {p.label}
+                    + {p.label}
                   </button>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Type + Status row */}

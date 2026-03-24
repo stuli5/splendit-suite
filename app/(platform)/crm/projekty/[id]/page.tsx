@@ -102,7 +102,13 @@ function CandidateDrawer({
   async function handlePhaseChange(newPhase: ProjectPhase) {
     setPhase(newPhase)
     await updateCandidatePhase(pc.id, newPhase)
-    onUpdated({ ...pc, note, phase: newPhase })
+    const newEntry = { phase: newPhase, ts: Date.now() }
+    onUpdated({
+      ...pc,
+      note,
+      phase: newPhase,
+      phaseHistory: [...(pc.phaseHistory ?? [{ phase: pc.phase, ts: pc.addedAt }]), newEntry],
+    })
   }
 
   async function handleFitScore() {
@@ -283,6 +289,56 @@ function CandidateDrawer({
               ))}
             </div>
           </div>
+
+          {/* Phase Timeline */}
+          {(() => {
+            const history = (pc.phaseHistory && pc.phaseHistory.length > 0)
+              ? [...pc.phaseHistory].sort((a, b) => a.ts - b.ts)
+              : [{ phase: pc.phase, ts: pc.addedAt }]
+            return (
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.06em', marginBottom: 12 }}>
+                  TIMELINE
+                </div>
+                <div style={{ position: 'relative', paddingLeft: 20 }}>
+                  <div style={{
+                    position: 'absolute', left: 6, top: 8, bottom: 8,
+                    width: 1.5, background: 'rgba(0,168,122,0.12)',
+                  }} />
+                  {history.map((entry, i) => {
+                    const c = PHASE_COLORS[entry.phase]
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, position: 'relative' }}>
+                        <div style={{
+                          position: 'absolute', left: -14, width: 13, height: 13,
+                          borderRadius: '50%', background: c,
+                          boxShadow: `0 0 0 3px ${c}25`,
+                          flexShrink: 0,
+                        }} />
+                        <div style={{
+                          flex: 1, padding: '8px 12px', borderRadius: 8,
+                          background: `${c}08`, border: `1px solid ${c}20`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                        }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: c }}>
+                            {PHASE_LABELS[entry.phase]}
+                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, flexShrink: 0 }}>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace' }}>
+                              {new Date(entry.ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                            </span>
+                            <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace', opacity: 0.7 }}>
+                              {new Date(entry.ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Notes */}
           <div>
@@ -780,6 +836,120 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Project Phase Timeline */}
+      {(() => {
+        // For each phase find the earliest timestamp any candidate reached it
+        const phaseFirstTs: Partial<Record<ProjectPhase, number>> = {}
+        for (const pc of pcList) {
+          const entries = pc.phaseHistory && pc.phaseHistory.length > 0
+            ? pc.phaseHistory
+            : [{ phase: pc.phase, ts: pc.addedAt }]
+          for (const e of entries) {
+            if (phaseFirstTs[e.phase] === undefined || e.ts < phaseFirstTs[e.phase]!) {
+              phaseFirstTs[e.phase] = e.ts
+            }
+          }
+        }
+
+        // Build nodes: project created + each active phase in order
+        type Node = { label: string; ts: number; color: string; reached: boolean }
+        const nodes: Node[] = [
+          { label: 'Created', ts: project.createdAt, color: '#7ab8ae', reached: true },
+          ...orderedPhases.map(ph => ({
+            label: PHASE_LABELS[ph],
+            ts: phaseFirstTs[ph] ?? 0,
+            color: PHASE_COLORS[ph],
+            reached: phaseFirstTs[ph] !== undefined,
+          })),
+        ]
+
+        // Progress: how many nodes are reached (excl. created)
+        const reachedCount = nodes.filter(n => n.reached).length
+        const progressPct  = nodes.length > 1 ? Math.round(((reachedCount - 1) / (nodes.length - 1)) * 100) : 0
+
+        function fmtDate(ts: number) {
+          const d = new Date(ts)
+          return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
+        }
+        function fmtTime(ts: number) {
+          return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        }
+
+        return (
+          <div style={{ padding: '18px 24px', marginBottom: 20, overflow: 'hidden' }}>
+            {/* Track */}
+            <div style={{ position: 'relative', height: 56, display: 'flex', alignItems: 'center' }}>
+              {/* Background rail */}
+              <div style={{
+                position: 'absolute', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)',
+                height: 3, background: 'rgba(0,168,122,0.1)', borderRadius: 2,
+              }} />
+              {/* Progress fill */}
+              <div style={{
+                position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+                height: 3, width: `${progressPct}%`, borderRadius: 2,
+                background: 'linear-gradient(90deg, #00a87a, #0091c7)',
+                transition: 'width 0.6s ease',
+              }} />
+              {/* Nodes */}
+              {nodes.map((node, i) => {
+                const pct = nodes.length === 1 ? 0 : (i / (nodes.length - 1)) * 100
+                return (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    left: `${pct}%`,
+                    transform: 'translateX(-50%)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+                  }}>
+                    {/* Date + time above */}
+                    <div style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                      marginBottom: 4, opacity: node.reached ? 1 : 0.4,
+                    }}>
+                      <span style={{
+                        fontSize: '0.58rem', fontFamily: 'JetBrains Mono, monospace',
+                        color: node.reached ? node.color : 'var(--text-dim)',
+                        fontWeight: 700, whiteSpace: 'nowrap',
+                      }}>
+                        {node.reached && node.ts ? fmtDate(node.ts) : '—'}
+                      </span>
+                      {node.reached && node.ts ? (
+                        <span style={{
+                          fontSize: '0.55rem', fontFamily: 'JetBrains Mono, monospace',
+                          color: node.reached ? node.color : 'var(--text-dim)',
+                          fontWeight: 500, whiteSpace: 'nowrap', opacity: 0.7,
+                        }}>
+                          {fmtTime(node.ts)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Dot */}
+                    <div style={{
+                      width: node.reached ? 14 : 10,
+                      height: node.reached ? 14 : 10,
+                      borderRadius: '50%',
+                      background: node.reached ? node.color : 'rgba(0,0,0,0.1)',
+                      border: node.reached ? `2px solid white` : '2px solid rgba(0,0,0,0.08)',
+                      boxShadow: node.reached ? `0 0 0 3px ${node.color}30` : 'none',
+                      transition: 'all 0.2s',
+                      zIndex: 1,
+                    }} />
+                    {/* Label below */}
+                    <div style={{
+                      fontSize: '0.6rem', fontWeight: 700, whiteSpace: 'nowrap', marginTop: 4,
+                      color: node.reached ? node.color : 'rgba(0,0,0,0.25)',
+                      letterSpacing: '0.03em',
+                    }}>
+                      {node.label}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Pipeline board */}
       <div style={{
