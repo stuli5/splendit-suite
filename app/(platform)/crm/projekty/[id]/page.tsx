@@ -373,8 +373,10 @@ function CandidateCard({
       style={{
         background: 'white',
         borderRadius: 10,
-        border: `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
-        borderLeft: `3px solid ${color}`,
+        borderTop:    `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
+        borderRight:  `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
+        borderBottom: `1px solid ${hovered ? color + '40' : 'rgba(0,0,0,0.07)'}`,
+        borderLeft:   `3px solid ${color}`,
         boxShadow: isDragging
           ? '0 12px 32px rgba(0,0,0,0.18)'
           : hovered
