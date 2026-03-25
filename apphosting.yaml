@@ -25,3 +25,5 @@ runConfig:
 env:
   - variable: ANTHROPIC_API_KEY
     secret: ANTHROPIC_API_KEY
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
