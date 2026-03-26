@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplenditSuite Importer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .logo {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: #00a87a;
+      color: white;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .header-title { font-weight: 700; font-size: 0.9rem; }
+    .header-sub   { font-size: 0.7rem; color: #888; }
+
+    .body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input {
+      padding: 8px 10px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: monospace;
+    }
+
+    input:focus { border-color: #00a87a; }
+
+    .btn-save {
+      padding: 9px;
+      border-radius: 8px;
+      border: none;
+      background: #00a87a;
+      color: white;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .btn-save:hover { background: #009970; }
+
+    .status {
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 0.75rem;
+      display: none;
+    }
+
+    .status.ok  { background: #f0faf8; color: #00a87a; border: 1px solid rgba(0,168,122,0.2); }
+    .status.err { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .footer {
+      padding: 10px 16px;
+      font-size: 0.68rem;
+      color: #aaa;
+      text-align: center;
+    }
+
+    .footer a { color: #00a87a; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">S</div>
+    <div>
+      <div class="header-title">SplenditSuite Importer</div>
+      <div class="header-sub">LinkedIn → CRM</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="field">
+      <label>SplenditSuite URL</label>
+      <input id="apiUrl" type="url" placeholder="https://splendidjob.cz" />
+    </div>
+
+    <div class="field">
+      <label>API Key</label>
+      <input id="apiKey" type="password" placeholder="Paste your API key" />
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <button class="btn-save" id="saveBtn">Save Settings</button>
+  </div>
+
+  <hr class="divider" />
+  <div class="footer">
+    Get your API key at <a id="settingsLink" href="#">SplenditSuite → Settings</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

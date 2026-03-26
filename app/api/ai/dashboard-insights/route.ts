@@ -29,7 +29,7 @@ Return JSON:
   "focus": "<what to focus on today, 1 sentence>"
 }`
 
-  const text = await askClaude(prompt, 400)
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 400)
   const data = extractJson<{
     headline: string
     insights: string[]
@@ -37,5 +37,7 @@ Return JSON:
     focus: string
   }>(text)
   if (!data) return NextResponse.json({ error: 'Could not generate insights' }, { status: 422 })
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, ...data })
 }

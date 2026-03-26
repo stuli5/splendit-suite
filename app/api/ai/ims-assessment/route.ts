@@ -24,6 +24,8 @@ Write 3-4 sentences covering:
 
 Be direct and professional. Plain text only.`
 
-  const assessment = await askClaude(prompt, 300)
+  const { text: assessment, inputTokens, outputTokens } = await askClaude(prompt, 300)
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, assessment })
 }

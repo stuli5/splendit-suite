@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Sidebar from '@/components/layout/Sidebar'
+import { upsertTeamMember } from '@/lib/team'
 
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -14,6 +15,15 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       router.replace('/login')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    if (!user) return
+    upsertTeamMember({
+      uid:         user.uid,
+      displayName: user.displayName ?? user.email ?? 'Unknown',
+      email:       user.email ?? '',
+    }).catch(() => {})
+  }, [user?.uid])
 
   if (loading) {
     return (

@@ -28,5 +28,15 @@ Vykonaj bezpečnostný audit kódu SplenditSuite. Prehľadaj codebase a skontrol
 ## 6. Závislosti
 - Spusti `npm audit` a reportuj high/critical zraniteľnosti
 
+## Code Review Standards
+After completing any implementation, review the code for:
+- Functions longer than 30 lines (likely doing too much)
+- Logic duplicated more than twice (extract to utility)
+- Any `any` type usage in TypeScript (replace with real types)
+- Components with more than 3 props that could be grouped into an object
+- Missing error handling on async operations
+
+Run /simplify before presenting code to the user.
+
 ## Výstup
 Pre každý bod uveď: ✅ OK / ⚠️ Varovanie / ❌ Kritické — a konkrétny súbor + riadok kde je problém.

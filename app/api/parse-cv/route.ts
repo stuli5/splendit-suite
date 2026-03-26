@@ -3,19 +3,20 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-async function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mod      = (await import('pdf-parse')) as any
-  const pdfParse = mod.default ?? mod
-  const result   = await pdfParse(buffer)
-  return result.text
+const EXTRACT_PROMPT = `Extract candidate information from this CV/resume. Return ONLY a valid JSON object with these fields (use null for missing fields):
+
+{
+  "firstName": string | null,
+  "lastName": string | null,
+  "position": string | null,
+  "email": string | null,
+  "phone": string | null,
+  "linkedIn": string | null,
+  "gitHub": string | null,
+  "skills": string[] | null
 }
 
-async function extractTextFromDocx(buffer: Buffer): Promise<string> {
-  const mammoth = await import('mammoth')
-  const result  = await mammoth.extractRawText({ buffer })
-  return result.value
-}
+For "skills", extract a concise list of up to 20 technical and professional skills (programming languages, frameworks, tools, methodologies, soft skills). Each skill should be a short label (1-3 words).`
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData().catch(() => null)
@@ -38,41 +39,52 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const buffer   = Buffer.from(await file.arrayBuffer())
-    const isPdf    = file.type === 'application/pdf' || file.name.endsWith('.pdf')
-    const cvText   = isPdf ? await extractTextFromPdf(buffer) : await extractTextFromDocx(buffer)
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const isPdf  = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
 
-    if (!cvText.trim()) {
-      return NextResponse.json({ error: 'Could not extract text from the file' }, { status: 422 })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let message: Anthropic.Message
+
+    if (isPdf) {
+      // Send PDF directly to Claude — no local parsing needed
+      const base64 = buffer.toString('base64')
+      message = await anthropic.messages.create({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role:    'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } } as Anthropic.DocumentBlockParam,
+            { type: 'text', text: EXTRACT_PROMPT },
+          ],
+        }],
+      })
+    } else {
+      // Extract text from docx first, then send as plain text
+      const mammoth = await import('mammoth')
+      const { value: cvText } = await mammoth.extractRawText({ buffer })
+
+      if (!cvText.trim()) {
+        return NextResponse.json({ error: 'Could not extract text from the file' }, { status: 422 })
+      }
+
+      message = await anthropic.messages.create({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role:    'user',
+          content: `${EXTRACT_PROMPT}\n\nCV text:\n${cvText.slice(0, 6000)}`,
+        }],
+      })
     }
-
-    const message = await anthropic.messages.create({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 512,
-      messages: [{
-        role:    'user',
-        content: `Extract candidate information from this CV/resume. Return ONLY a valid JSON object with these fields (use null for missing fields):
-
-{
-  "firstName": string | null,
-  "lastName": string | null,
-  "position": string | null,
-  "email": string | null,
-  "phone": string | null,
-  "linkedIn": string | null,
-  "gitHub": string | null
-}
-
-CV text:
-${cvText.slice(0, 6000)}`,
-      }],
-    })
 
     const raw  = message.content[0].type === 'text' ? message.content[0].text : ''
     const json = raw.match(/\{[\s\S]*\}/)
     if (!json) return NextResponse.json({ error: 'Could not parse CV data' }, { status: 422 })
 
     const data = JSON.parse(json[0])
+    const { logAiUsage } = await import('@/lib/ai-usage')
+    logAiUsage(message.usage.input_tokens, message.usage.output_tokens).catch(() => {})
     return NextResponse.json({ ok: true, data })
 
   } catch (err) {

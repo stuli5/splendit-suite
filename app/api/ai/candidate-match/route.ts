@@ -29,8 +29,10 @@ Return top matches as JSON array (max 5):
   }
 ]`
 
-  const text = await askClaude(prompt, 600)
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 600)
   const data = extractJson<{ candidateId: string; score: number; label: string; reason: string }[]>(text)
   if (!data) return NextResponse.json({ error: 'Could not match candidates' }, { status: 422 })
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, matches: data })
 }

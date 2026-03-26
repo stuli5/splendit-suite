@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
     ? `${SYSTEM}\n\nConversation so far:\n${conversationText}\n\nUser: ${lastUser.content}\n\nSplenditBot:`
     : `${SYSTEM}\n\nUser: ${lastUser.content}\n\nSplenditBot:`
 
-  const reply = await askClaude(prompt, 600)
+  const { text: reply, inputTokens, outputTokens } = await askClaude(prompt, 600)
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, reply })
 }

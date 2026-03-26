@@ -24,7 +24,7 @@ Return JSON:
   "nextSteps": "<1 sentence recommendation>"
 }`
 
-  const text = await askClaude(prompt, 800)
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 800)
   const data = extractJson<{
     summary: string
     keyDecisions: string[]
@@ -33,5 +33,7 @@ Return JSON:
     nextSteps: string
   }>(text)
   if (!data) return NextResponse.json({ error: 'Could not summarize meeting' }, { status: 422 })
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, ...data })
 }

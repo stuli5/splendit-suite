@@ -20,6 +20,8 @@ Write in English. Include:
 
 Keep it concise and professional. Plain text, use • for bullets.`
 
-  const text = await askClaude(prompt, 800)
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 800)
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, text })
 }

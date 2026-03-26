@@ -8,6 +8,7 @@ export interface QuestionDef {
   difficulty: Difficulty
   points: number
   answers: string[]
+  wrong?: boolean[]
 }
 
 export interface FormDef {
@@ -1275,6 +1276,13 @@ export const aiQaEngineerForm: FormDef = {
         'Building continuous monitoring and evaluation strategies for AI components',
         'Serving as the quality backbone for agentic workflows, retrieval systems, and multi-agent orchestration',
       ],
+      wrong: [
+        true,
+        false,
+        true,
+        false,
+        false,
+      ],
     },
     {
       id: 2,
@@ -1287,6 +1295,13 @@ export const aiQaEngineerForm: FormDef = {
         'Test embedding quality and retrieval accuracy',
         'Verify ranking performance and precision metrics',
         'Skip validation if the data source is trusted',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
       ],
     },
     {
@@ -1301,6 +1316,13 @@ export const aiQaEngineerForm: FormDef = {
         'Create scenarios testing failure recovery and graceful degradation',
         'Test concurrency, race conditions, and deadlock scenarios',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
     },
     {
       id: 4,
@@ -1313,6 +1335,13 @@ export const aiQaEngineerForm: FormDef = {
         'Creating structured tests for safety, compliance, and robustness',
         'Only testing during production incidents',
         'Validating handling of ambiguous inputs and malformed requests',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        true,
+        false,
       ],
     },
     {
@@ -1327,6 +1356,13 @@ export const aiQaEngineerForm: FormDef = {
         'Automated regression testing for model outputs',
         'Testing can be fully automated without human oversight',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
+      ],
     },
     {
       id: 6,
@@ -1339,6 +1375,13 @@ export const aiQaEngineerForm: FormDef = {
         'Create evaluation datasets representing diverse populations',
         'Set up alerts for bias metrics exceeding defined thresholds',
         'Regular audits with fairness-focused test scenarios',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
       ],
     },
     {
@@ -1353,6 +1396,13 @@ export const aiQaEngineerForm: FormDef = {
         'It only affects traditional ML, not LLMs or agentic systems',
         'Requires continuous monitoring to catch before it impacts production',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        true,
+        false,
+      ],
     },
     {
       id: 8,
@@ -1365,6 +1415,13 @@ export const aiQaEngineerForm: FormDef = {
         'Create evaluation suites with acceptable variance ranges',
         'Test behavior patterns rather than exact outputs',
         'Avoid testing since outputs are unpredictable',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
       ],
     },
     {
@@ -1379,6 +1436,13 @@ export const aiQaEngineerForm: FormDef = {
         'Continuous monitoring with drift detection and automated alerts',
         'Red-team exercises simulating adversarial scenarios and high-risk inputs',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
     },
     {
       id: 10,
@@ -1391,6 +1455,13 @@ export const aiQaEngineerForm: FormDef = {
         'Drift, bias, and degradation trends',
         'Hallucination patterns and reasoning failures',
         'Metrics are not needed for AI systems',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
       ],
     },
     {
@@ -1405,6 +1476,13 @@ export const aiQaEngineerForm: FormDef = {
         'Track behavioral consistency across model updates',
         'Flag significant deviations for human review',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
     },
     {
       id: 12,
@@ -1417,6 +1495,13 @@ export const aiQaEngineerForm: FormDef = {
         'Integrate automated tests that catch regressions early',
         'Set up continuous evaluation for model behavior',
         'CI/CD is only for traditional software, not AI',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
       ],
     },
     {
@@ -1431,6 +1516,13 @@ export const aiQaEngineerForm: FormDef = {
         'Monitor for data quality issues and anomalies',
         'Ensure traceability from raw data to model outputs',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
+      ],
     },
     {
       id: 14,
@@ -1444,6 +1536,13 @@ export const aiQaEngineerForm: FormDef = {
         'Both require different detection and mitigation strategies',
         'Only hallucination needs to be tested',
       ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        true,
+      ],
     },
     {
       id: 15,
@@ -1456,6 +1555,13 @@ export const aiQaEngineerForm: FormDef = {
         'Distributed tracing for multi-agent workflows and API calls',
         'Alerting system for drift, bias, performance degradation, and anomalies',
         'Integration with observability platforms (DataDog, Grafana, custom dashboards)',
+      ],
+      wrong: [
+        true,
+        false,
+        false,
+        false,
+        false,
       ],
     },
   ],

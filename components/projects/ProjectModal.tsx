@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { getCompanies } from '@/lib/companies'
 import { createProject, updateProject } from '@/lib/projects'
-import type { Company } from '@/lib/types'
+import { getPeople } from '@/lib/meet-visu'
+import type { Company, Person } from '@/lib/types'
 import type { Project, ProjectPhase, ProjectType, ProjectStatus, CooperationType } from '@/lib/types'
+import { useAuth } from '@/lib/auth-context'
 
 const ALL_PHASES: { value: ProjectPhase; label: string }[] = [
   { value: 'contacted',    label: 'Contacted'    },
@@ -44,6 +46,7 @@ const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
 
 const DEFAULT_PHASES: ProjectPhase[] = ['contacted', 'presentation', 'interview', 'rejected', 'onboarding', 'closed']
 
+
 interface Props {
   project?: Project
   onClose: () => void
@@ -63,7 +66,9 @@ const LABEL_STYLE: React.CSSProperties = {
 }
 
 export default function ProjectModal({ project, onClose, onSaved }: Props) {
+  const { user } = useAuth()
   const [companies,       setCompanies]       = useState<Company[]>([])
+  const [tmobilePeople,   setTmobilePeople]   = useState<Person[]>([])
   const [companySearch,   setCompanySearch]   = useState(project?.companyName ?? '')
   const [companyDropdown, setCompanyDropdown] = useState(false)
   const [saving,          setSaving]          = useState(false)
@@ -79,10 +84,16 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
   const [salary,          setSalary]          = useState(project?.salary ?? '')
   const [requiredCount,  setRequiredCount]  = useState(project?.requiredCount  ?? 1)
   const [responsible,    setResponsible]    = useState(project?.responsible    ?? '')
+  const [managerDropdown, setManagerDropdown] = useState(false)
   const [description,    setDescription]    = useState(project?.description    ?? '')
   const [jobDescription, setJobDescription] = useState(project?.jobDescription ?? '')
 
   useEffect(() => { getCompanies().then(setCompanies) }, [])
+  useEffect(() => {
+    getPeople().then(people => {
+      setTmobilePeople(people.filter(p => p.company.toLowerCase().includes('t-mobile')))
+    })
+  }, [])
 
   const filteredCompanies = companies.filter(c =>
     c.name.toLowerCase().includes(companySearch.toLowerCase())
@@ -147,10 +158,14 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
     if (description.trim())    data.description    = description.trim()
     if (jobDescription.trim()) data.jobDescription = jobDescription.trim()
 
+    const actor = user
+      ? { uid: user.uid, displayName: user.displayName ?? user.email ?? 'Unknown', email: user.email ?? '' }
+      : undefined
+
     if (project) {
-      await updateProject(project.id, data)
+      await updateProject(project.id, data, actor ? { actor, entityName: data.positionName } : undefined)
     } else {
-      await createProject(data)
+      await createProject(data, actor)
     }
     setSaving(false)
     onSaved()
@@ -353,14 +368,48 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
                 style={INPUT_STYLE}
               />
             </div>
-            <div>
-              <label style={LABEL_STYLE}>RESPONSIBLE</label>
+            <div style={{ position: 'relative' }}>
+              <label style={LABEL_STYLE}>RESPONSIBLE MANAGER</label>
               <input
                 value={responsible}
-                onChange={e => setResponsible(e.target.value)}
+                onChange={e => {
+                  setResponsible(e.target.value)
+                  setManagerDropdown(true)
+                }}
+                onFocus={() => setManagerDropdown(true)}
+                onBlur={() => setTimeout(() => setManagerDropdown(false), 150)}
                 placeholder="Name..."
                 style={INPUT_STYLE}
               />
+              {managerDropdown && companyName.toLowerCase().includes('t-mobile') && (() => {
+                const filtered = tmobilePeople.filter(p =>
+                  p.name.toLowerCase().includes(responsible.toLowerCase())
+                )
+                return filtered.length > 0 ? (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                    background: 'white', border: '1px solid rgba(0,168,122,0.2)',
+                    borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                    maxHeight: 180, overflowY: 'auto', marginTop: 2,
+                  }}>
+                    {filtered.map(p => (
+                      <div
+                        key={p.id}
+                        onMouseDown={() => { setResponsible(p.name); setManagerDropdown(false) }}
+                        style={{
+                          padding: '9px 14px', cursor: 'pointer', fontSize: '0.82rem',
+                          fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#f0faf8')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span style={{ fontWeight: 600 }}>{p.name}</span>
+                        {p.role && <span style={{ color: 'var(--text-dim)', marginLeft: 8, fontSize: '0.75rem' }}>{p.role}</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : null
+              })()}
             </div>
           </div>
 

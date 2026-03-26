@@ -7,6 +7,7 @@ import { getProjectCandidates, addCandidateToProject, updateCandidatePhase, upda
 import { getCRMCandidates } from '@/lib/crm-candidates'
 import type { Project, ProjectPhase, ProjectStatus, CooperationType, ProjectCandidate, CRMCandidate } from '@/lib/types'
 import ProjectModal from '@/components/projects/ProjectModal'
+import ActivityFeed from '@/components/crm-candidates/ActivityFeed'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -1073,6 +1074,12 @@ export default function ProjectDetailPage() {
           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{project.jobDescription}</div>
         </div>
       )}
+
+      {/* Activity */}
+      <div className="glass-card" style={{ padding: '20px 24px', marginTop: 24 }}>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', marginBottom: 16 }}>Activity</div>
+        <ActivityFeed entityType="project" entityId={id} />
+      </div>
 
       {/* Modals & Drawer */}
       {showEdit && (

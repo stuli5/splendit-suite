@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getProjects } from '@/lib/projects'
 import { getCRMCandidates } from '@/lib/crm-candidates'
 import { getProjectCandidates } from '@/lib/project-candidates'
+import { getMonthlyUsage, formatTokens, type MonthlyUsage } from '@/lib/ai-usage'
 
 const modules = [
   { href: '/crm/kandidati',   icon: '👤', label: 'Candidates',      desc: 'Candidate management & pipeline',   color: '#00a87a' },
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const [insights,  setInsights]  = useState<AiInsights | null>(null)
   const [loading,   setLoading]   = useState(false)
   const [stats,     setStats]     = useState<Record<string, number> | null>(null)
+  const [aiUsage,   setAiUsage]   = useState<MonthlyUsage | null>(null)
 
   useEffect(() => {
     async function loadStats() {
@@ -51,6 +53,9 @@ export default function DashboardPage() {
         activeContracts:     0,
         newCandidatesWeek:   newWeek,
       })
+
+      const usage = await getMonthlyUsage()
+      setAiUsage(usage)
     }
     loadStats()
   }, [])
@@ -145,6 +150,40 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* AI Usage widget */}
+      <div className="glass-card" style={{ padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '1.1rem' }}>🤖</span>
+          <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
+            AI USAGE — {new Date().toISOString().slice(0, 7)}
+          </span>
+        </div>
+        {aiUsage ? (
+          <>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 2 }}>Calls</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0091c7', fontFamily: 'Syne, sans-serif' }}>{aiUsage.calls}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 2 }}>Input tokens</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#00a87a', fontFamily: 'Syne, sans-serif' }}>{formatTokens(aiUsage.inputTokens)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 2 }}>Output tokens</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#2db8b0', fontFamily: 'Syne, sans-serif' }}>{formatTokens(aiUsage.outputTokens)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginBottom: 2 }}>Est. cost</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e0457a', fontFamily: 'Syne, sans-serif' }}>${aiUsage.cost.toFixed(4)}</div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>No AI calls recorded this month yet.</div>
+        )}
+      </div>
 
       {/* Module grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>

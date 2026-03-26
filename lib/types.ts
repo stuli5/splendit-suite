@@ -28,16 +28,23 @@ export interface Company {
 
 // ─── CRM Candidates ──────────────────────────────────────────────────────────
 
+export type CRMStage = 'new' | 'screening' | 'interview' | 'offer'
+
 export interface CRMCandidate {
   id:        string
   firstName: string
   lastName:  string
   position:  string
+  stage?:    CRMStage
   linkedIn?: string
   gitHub?:   string
   email?:    string
   phone?:    string
   note?:     string
+  skills?:   string[]
+  imsId?:    string
+  cvUrl?:    string
+  cvName?:   string
   createdAt: number
 }
 
@@ -173,6 +180,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard' | 'critical'
 export interface AnswerOption {
   text: string
   checked: boolean
+  wrong?: boolean
 }
 
 export interface QuestionAnswer {
@@ -200,6 +208,8 @@ export interface Candidate {
   lastName?: string
   position: string
   experience: string
+  email?: string
+  phone?: string
   score: number
   totalPoints: number
   maxPoints: number
@@ -243,6 +253,61 @@ export interface Deal {
   responsible?: string
   note?:        string
   createdAt:    number
+}
+
+// ─── Activity & Notifications ─────────────────────────────────────────────────
+
+export interface ActorInfo {
+  uid:         string
+  displayName: string
+  email:       string
+}
+
+export type ActivityEntityType = 'candidate' | 'project' | 'project_candidate'
+
+export type ActivityAction =
+  | 'candidate.created'
+  | 'candidate.updated'
+  | 'candidate.stage_changed'
+  | 'candidate.deleted'
+  | 'project.created'
+  | 'project.updated'
+  | 'project.deleted'
+  | 'project_candidate.added'
+  | 'project_candidate.phase_changed'
+  | 'project_candidate.removed'
+
+export interface ActivityLogEntry {
+  id:         string
+  action:     ActivityAction
+  entityType: ActivityEntityType
+  entityId:   string
+  entityName: string
+  actor:      ActorInfo
+  metadata?:  Record<string, string | number | boolean | null>
+  ts:         number
+}
+
+export type NotificationType = 'info' | 'success' | 'warning'
+
+export interface AppNotification {
+  id:         string
+  userId:     string
+  title:      string
+  body:       string
+  entityType: ActivityEntityType
+  entityId:   string
+  type:       NotificationType
+  read:       boolean
+  actorUid:   string
+  ts:         number
+}
+
+export interface TeamMember {
+  uid:         string
+  displayName: string
+  email:       string
+  updatedAt:   number
 }
 
 // ─── Bodyshop ────────────────────────────────────────────────────────────────

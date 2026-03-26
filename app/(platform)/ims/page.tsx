@@ -504,7 +504,7 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
   )
 
   return (
-    <div className="glass-card" style={{ padding: '20px 24px', marginBottom: 12 }}>
+    <div id={candidate.id} className="glass-card" style={{ padding: '20px 24px', marginBottom: 12 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 180 }}>
@@ -538,6 +538,24 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
           <IconBtn title="Delete candidate" onClick={deleteCandidate}>
             🗑
           </IconBtn>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ marginTop: 12 }}>
+        <div style={{
+          height: 6,
+          borderRadius: 4,
+          background: 'rgba(255,255,255,0.08)',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${Math.round(candidate.score)}%`,
+            background: scoreColor(candidate.score),
+            borderRadius: 4,
+            transition: 'width 0.4s ease',
+          }} />
         </div>
       </div>
 

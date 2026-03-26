@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { useAuth } from '@/lib/auth-context'
+import NotificationBell from './NotificationBell'
 
 const modules = [
   { href: '/dashboard',       icon: '⬡', label: 'Dashboard' },
-  { href: '/crm/kandidati',   icon: '👤', label: 'Candidates' },
+  { href: '/crm/candidates',  icon: '👤', label: 'Candidates' },
   { href: '/crm/spolecnosti', icon: '🏢', label: 'Companies' },
   { href: '/crm/projekty',    icon: '📁', label: 'Projects' },
   { href: '/ims',             icon: '🎯', label: 'IMS' },
@@ -19,6 +21,7 @@ const modules = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { user }  = useAuth()
 
   return (
     <aside style={{
@@ -85,7 +88,30 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Odhlásit */}
+      {/* Notifications */}
+      {user && (
+        <div style={{ padding: '8px 10px', borderTop: '1px solid rgba(0,168,122,0.1)' }}>
+          <NotificationBell userId={user.uid} />
+        </div>
+      )}
+
+      {/* Settings */}
+      <div style={{ padding: '4px 10px' }}>
+        <Link
+          href="/settings/extension"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 12px', borderRadius: 9,
+            fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem',
+            color: 'var(--text-dim)', textDecoration: 'none',
+            transition: 'color 0.15s',
+          }}
+        >
+          <span>🔌</span> LinkedIn Extension
+        </Link>
+      </div>
+
+      {/* Sign out */}
       <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(0,168,122,0.1)' }}>
         <button
           onClick={() => signOut(auth)}

@@ -38,6 +38,37 @@ service cloud.firestore {
     match /crmCandidates/{id}      { allow read, write: if isAuth(); }
     match /projectCandidates/{id}  { allow read, write: if isAuth(); }
     match /deals/{id}              { allow read, write: if isAuth(); }
+    match /aiUsage/{id}            { allow read: if isAuth(); allow write: if true; }
+
+    // ── Activity & Notifications ──────────────────────────────────────────────
+
+    // Activity log — append-only, authenticated users can read all
+    match /activityLog/{id} {
+      allow read:          if isAuth();
+      allow create:        if isAuth()
+        && hasFields(['action', 'entityType', 'entityId', 'entityName', 'actor', 'ts'])
+        && incomingData().ts is number;
+      allow update, delete: if false;
+    }
+
+    // Notifications — all internal users can read (query filters to own userId client-side)
+    match /notifications/{id} {
+      allow read:   if isAuth();
+      allow create: if isAuth()
+        && hasFields(['userId', 'title', 'body', 'entityType', 'entityId', 'type', 'read', 'actorUid', 'ts'])
+        && incomingData().read == false
+        && incomingData().ts is number;
+      allow update: if isAuth()
+        && incomingData().diff(resource.data).affectedKeys().hasOnly(['read'])
+        && incomingData().read is bool;
+      allow delete: if false;
+    }
+
+    // Users (team members) — read all auth users; write only own record
+    match /users/{uid} {
+      allow read:  if isAuth();
+      allow write: if isAuth() && request.auth.uid == uid;
+    }
 
     // ── Portal collections ────────────────────────────────────────────────────
 

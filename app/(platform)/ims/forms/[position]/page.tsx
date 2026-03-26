@@ -5,6 +5,7 @@ import { collection, addDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getFormBySlug } from '@/lib/ims-questions'
 import type { FormDef, QuestionDef } from '@/lib/ims-questions'
+import { createCRMCandidate } from '@/lib/crm-candidates'
 import Link from 'next/link'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -54,6 +55,8 @@ function scoreLabel(pct: number) {
 
 // ─── Question Block ───────────────────────────────────────────────────────────
 
+const WRONG_COLOR = '#ef4444'
+
 function QuestionBlock({
   question,
   checked,
@@ -68,6 +71,7 @@ function QuestionBlock({
   const diff = question.difficulty as Difficulty
   const color = DIFF_COLORS[diff]
   const anyChecked = checked.some(Boolean)
+  const wrongAnswers = question.answers.filter((_, i) => question.wrong?.[i] === true)
 
   return (
     <div style={{
@@ -114,39 +118,91 @@ function QuestionBlock({
         {question.title}
       </div>
 
+      {wrongAnswers.length > 0 && (
+        <div style={{
+          marginBottom: 12,
+          border: `1px solid ${WRONG_COLOR}55`,
+          background: `${WRONG_COLOR}0d`,
+          borderRadius: 8,
+          padding: '10px 12px',
+        }}>
+          <div style={{
+            fontSize: '0.74rem',
+            fontWeight: 700,
+            color: WRONG_COLOR,
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+            marginBottom: 6,
+          }}>
+            Incorrect answers
+          </div>
+          <ul style={{
+            margin: 0,
+            paddingLeft: 18,
+            color: WRONG_COLOR,
+            fontSize: '0.8rem',
+            lineHeight: 1.45,
+          }}>
+            {wrongAnswers.map((text, i) => (
+              <li key={i}>{text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Answers */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {question.answers.map((answer, i) => (
-          <label
-            key={i}
-            style={{
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-              padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-              border: `1px solid ${checked[i] ? `${color}44` : 'rgba(255,255,255,0.06)'}`,
-              background: checked[i] ? `${color}11` : 'rgba(255,255,255,0.02)',
-              transition: 'all 0.15s',
-            }}
-          >
-            <span style={{
-              width: 18, height: 18, borderRadius: 4, flexShrink: 0,
-              border: `2px solid ${checked[i] ? color : 'rgba(255,255,255,0.2)'}`,
-              background: checked[i] ? color : 'transparent',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              marginTop: 1, transition: 'all 0.15s', fontSize: '0.65rem', color: '#fff',
-            }}>
-              {checked[i] ? '✓' : ''}
-            </span>
-            <input
-              type="checkbox"
-              checked={checked[i]}
-              onChange={() => onToggle(i)}
-              style={{ display: 'none' }}
-            />
-            <span style={{ fontSize: '0.82rem', color: 'var(--text)', lineHeight: 1.5 }}>
-              {answer}
-            </span>
-          </label>
-        ))}
+        {question.answers.map((answer, i) => {
+          const isWrongAnswer = question.wrong?.[i] === true
+          const itemColor = isWrongAnswer ? WRONG_COLOR : color
+          return (
+            <label
+              key={i}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+                padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                border: `1px solid ${
+                  isWrongAnswer
+                    ? `${WRONG_COLOR}55`
+                    : checked[i] ? `${color}44` : 'rgba(255,255,255,0.06)'
+                }`,
+                background: isWrongAnswer
+                  ? `${WRONG_COLOR}0d`
+                  : checked[i] ? `${color}11` : 'rgba(255,255,255,0.02)',
+                transition: 'all 0.15s',
+              }}
+            >
+              <span style={{
+                width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                border: `2px solid ${checked[i] ? itemColor : isWrongAnswer ? `${WRONG_COLOR}66` : 'rgba(255,255,255,0.2)'}`,
+                background: checked[i] ? itemColor : 'transparent',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                marginTop: 1, transition: 'all 0.15s', fontSize: '0.65rem', color: '#fff',
+              }}>
+                {checked[i] ? '✓' : ''}
+              </span>
+              <input
+                type="checkbox"
+                checked={checked[i]}
+                onChange={() => onToggle(i)}
+                style={{ display: 'none' }}
+              />
+              <span style={{
+                fontSize: '0.82rem',
+                color: isWrongAnswer ? WRONG_COLOR : 'var(--text)',
+                lineHeight: 1.5,
+                fontStyle: isWrongAnswer ? 'italic' : 'normal',
+              }}>
+                {answer}
+                {isWrongAnswer && (
+                  <span style={{ marginLeft: 8, fontSize: '0.7rem', opacity: 0.8, fontWeight: 600 }}>
+                    ✗ wrong answer
+                  </span>
+                )}
+              </span>
+            </label>
+          )
+        })}
       </div>
     </div>
   )
@@ -162,7 +218,9 @@ export default function InterviewFormPage({ params }: { params: Promise<{ positi
   const [firstName, setFirstName]   = useState('')
   const [lastName, setLastName]     = useState('')
   const [experience, setExperience] = useState('')
-  const [checked, setChecked]       = useState<Record<number, boolean[]>>(() => {
+  const [email, setEmail]           = useState('')
+  const [phone, setPhone]           = useState('')
+  const [checked, setChecked] = useState<Record<number, boolean[]>>(() => {
     if (!form) return {}
     const init: Record<number, boolean[]> = {}
     form.questions.forEach(q => { init[q.id] = new Array(q.answers.length).fill(false) })
@@ -177,8 +235,8 @@ export default function InterviewFormPage({ params }: { params: Promise<{ positi
     if (!form) return { total: 0, pct: 0, easy: 0, medium: 0, hard: 0, critical: 0 }
     let total = 0, easy = 0, medium = 0, hard = 0, critical = 0
     form.questions.forEach(q => {
-      const anyChecked = checked[q.id]?.some(Boolean)
-      if (anyChecked) {
+      const anyCorrect = checked[q.id]?.some(Boolean)
+      if (anyCorrect) {
         total += q.points
         if (q.difficulty === 'easy') easy += q.points
         else if (q.difficulty === 'medium') medium += q.points
@@ -219,14 +277,20 @@ export default function InterviewFormPage({ params }: { params: Promise<{ positi
         points: q.points,
         earnedPoints: checked[q.id]?.some(Boolean) ? q.points : 0,
         maxPoints: q.points,
-        answers: q.answers.map((text, i) => ({ text, checked: checked[q.id]?.[i] ?? false })),
+        answers: q.answers.map((text, i) => ({
+          text,
+          checked: checked[q.id]?.[i] ?? false,
+          ...(q.wrong?.[i] && { wrong: true }),
+        })),
       }))
-      await addDoc(collection(db, 'candidates'), {
+      const ref = await addDoc(collection(db, 'candidates'), {
         name: `${firstName.trim()} ${lastName.trim()}`,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         position: form.position,
         experience,
+        ...(email.trim() && { email: email.trim() }),
+        ...(phone.trim() && { phone: phone.trim() }),
         score: score.pct,
         totalPoints: score.total,
         maxPoints: form.totalPoints,
@@ -238,6 +302,19 @@ export default function InterviewFormPage({ params }: { params: Promise<{ positi
         date: new Date().toISOString(),
         answers,
       })
+      try {
+        await createCRMCandidate({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          position: form.position,
+          stage: 'new',
+          ...(email.trim() && { email: email.trim() }),
+          ...(phone.trim() && { phone: phone.trim() }),
+          imsId: ref.id,
+        })
+      } catch {
+        // CRM creation failure doesn't block IMS save
+      }
       setSaved(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to save')
@@ -310,6 +387,32 @@ export default function InterviewFormPage({ params }: { params: Promise<{ positi
               value={lastName}
               onChange={e => setLastName(e.target.value)}
               placeholder="Doe"
+              style={inputStyle}
+            />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+              Phone
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="+420 ..."
               style={inputStyle}
             />
           </div>

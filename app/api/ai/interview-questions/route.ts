@@ -18,8 +18,10 @@ Return ONLY valid JSON array:
   }
 ]`
 
-  const text = await askClaude(prompt, 800)
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 800)
   const data = extractJson<{ question: string; category: string; difficulty: string; hint: string }[]>(text)
   if (!data) return NextResponse.json({ error: 'Could not generate questions' }, { status: 422 })
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, questions: data })
 }

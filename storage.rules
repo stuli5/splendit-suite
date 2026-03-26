@@ -20,6 +20,16 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // ── CRM candidate CVs ─────────────────────────────────────────────────────
+    // Path: cvs/{candidateId}/{filename}
+
+    match /cvs/{candidateId}/{fileName} {
+      allow read, delete: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType.matches('application/pdf|application/msword|application/vnd\\.openxmlformats.*');
+    }
+
     // ── Deny everything else ──────────────────────────────────────────────────
     match /{allPaths=**} {
       allow read, write: if false;

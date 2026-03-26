@@ -24,8 +24,10 @@ Return JSON:
   "reason": "<1 sentence explanation>"
 }`
 
-  const text  = await askClaude(prompt, 200)
-  const data  = extractJson<{ score: number; label: string; reason: string }>(text)
-  if (!data)  return NextResponse.json({ error: 'Could not evaluate' }, { status: 422 })
+  const { text, inputTokens, outputTokens } = await askClaude(prompt, 200)
+  const data = extractJson<{ score: number; label: string; reason: string }>(text)
+  if (!data) return NextResponse.json({ error: 'Could not evaluate' }, { status: 422 })
+  const { logAiUsage } = await import('@/lib/ai-usage')
+  logAiUsage(inputTokens, outputTokens).catch(() => {})
   return NextResponse.json({ ok: true, ...data })
 }

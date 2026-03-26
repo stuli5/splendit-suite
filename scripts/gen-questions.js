@@ -17,7 +17,7 @@ function esc(s) {
 
 let out = '// AUTO-GENERATED — do not edit manually\n\n';
 out += "export type Difficulty = 'easy' | 'medium' | 'hard' | 'critical'\n\n";
-out += 'export interface QuestionDef {\n  id: number\n  title: string\n  difficulty: Difficulty\n  points: number\n  answers: string[]\n}\n\n';
+out += 'export interface QuestionDef {\n  id: number\n  title: string\n  difficulty: Difficulty\n  points: number\n  answers: string[]\n  wrong?: boolean[]\n}\n\n';
 out += 'export interface FormDef {\n  slug: string\n  position: string\n  totalPoints: number\n  questions: QuestionDef[]\n}\n\n';
 
 for (const [fname, config] of Object.entries(FORM_CONFIGS)) {
@@ -38,9 +38,14 @@ for (const [fname, config] of Object.entries(FORM_CONFIGS)) {
     const answers = answerMatches
       .map(m => m[1].trim().replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
       .filter(a => a.length > 0);
+    const correctMatches = [...block.matchAll(/data-correct="(true|false)"/g)];
+    const wrong =
+      correctMatches.length === answers.length
+        ? correctMatches.map(m => m[1] === 'false')
+        : undefined;
 
     const pts = config.pointsMap[qNum] || 2;
-    questions.push({ id: qNum, title, difficulty: diff, points: pts, answers });
+    questions.push({ id: qNum, title, difficulty: diff, points: pts, answers, wrong });
   });
 
   out += 'export const ' + config.varName + 'Form: FormDef = {\n';
@@ -58,6 +63,11 @@ for (const [fname, config] of Object.entries(FORM_CONFIGS)) {
     out += '      answers: [\n';
     q.answers.forEach(a => { out += "        '" + esc(a) + "',\n"; });
     out += '      ],\n';
+    if (q.wrong && q.wrong.some(Boolean)) {
+      out += '      wrong: [\n';
+      q.wrong.forEach(v => { out += `        ${v},\n`; });
+      out += '      ],\n';
+    }
     out += '    },\n';
   });
   out += '  ],\n}\n\n';
