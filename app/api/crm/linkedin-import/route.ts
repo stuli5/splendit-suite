@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCRMCandidate } from '@/lib/crm-candidates'
+import { adminDb } from '@/lib/firebase-admin'
 import type { CRMStage } from '@/lib/types'
 
 const VALID_STAGES = new Set<CRMStage>(['new', 'screening', 'interview', 'offer'])
@@ -45,20 +45,21 @@ export async function POST(req: NextRequest) {
     firstName,
     lastName,
     position,
-    stage:    validateStage(body.stage),
-    ...(typeof body.email   === 'string' && body.email   && { email:   body.email.trim() }),
-    ...(typeof body.phone   === 'string' && body.phone   && { phone:   body.phone.trim() }),
+    stage:     validateStage(body.stage),
+    createdAt: Date.now(),
+    ...(typeof body.email    === 'string' && body.email    && { email:    body.email.trim() }),
+    ...(typeof body.phone    === 'string' && body.phone    && { phone:    body.phone.trim() }),
     ...(typeof body.linkedIn === 'string' && body.linkedIn && { linkedIn: body.linkedIn.trim() }),
-    ...(typeof body.note    === 'string' && body.note    && { note:    body.note.trim() }),
+    ...(typeof body.note     === 'string' && body.note     && { note:     body.note.trim() }),
     ...(skills.length && { skills }),
   }
 
-  // ── Save ─────────────────────────────────────────────────────────────────
+  // ── Save via Admin SDK (bypasses Firestore security rules) ───────────────
   try {
-    const id = await createCRMCandidate(candidate)
-    return NextResponse.json({ ok: true, id }, { status: 201 })
+    const docRef = await adminDb.collection('crmCandidates').add(candidate)
+    return NextResponse.json({ ok: true, id: docRef.id }, { status: 201 })
   } catch (err) {
-    console.error('[linkedin-import] createCRMCandidate failed:', err)
+    console.error('[linkedin-import] Firestore write failed:', err)
     return NextResponse.json({ error: 'Failed to save candidate.' }, { status: 500 })
   }
 }
