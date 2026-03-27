@@ -36,9 +36,6 @@ export async function POST(req: NextRequest) {
   if (!firstName || !lastName) {
     return NextResponse.json({ error: 'firstName and lastName are required.' }, { status: 422 })
   }
-  if (!position) {
-    return NextResponse.json({ error: 'position is required.' }, { status: 422 })
-  }
 
   const skills: string[] = Array.isArray(body.skills)
     ? body.skills.filter((s): s is string => typeof s === 'string').slice(0, 30)
