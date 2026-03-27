@@ -11,7 +11,7 @@ function validateStage(s: unknown): CRMStage {
 
 export async function POST(req: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────────
-  const importKey = process.env.LINKEDIN_IMPORT_KEY
+  const importKey = (process.env.LINKEDIN_IMPORT_KEY ?? '').trim()
   if (!importKey) {
     return NextResponse.json({ error: 'Import key not configured on server.' }, { status: 500 })
   }
