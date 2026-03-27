@@ -402,10 +402,6 @@
       showError('First name and last name are required.')
       return
     }
-    if (!position) {
-      showError('Position is required.')
-      return
-    }
 
     const skills = skillsRaw
       ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean)
