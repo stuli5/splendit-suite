@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { askClaude } from '@/lib/ai'
 
 export async function POST(req: NextRequest) {
-  const { positionName, companyName, type, cooperationType } = await req.json()
+  const { positionName, companyName, type, cooperationType, description } = await req.json()
   if (!positionName) return NextResponse.json({ error: 'Missing positionName' }, { status: 400 })
 
   const prompt = `Write a professional job description for a recruitment posting.
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 Position: ${positionName}
 Company: ${companyName ?? 'a technology company'}
 Type: ${type ?? 'recruitment'}
-Contract: ${cooperationType ?? 'HPP'}
+Contract: ${cooperationType ?? 'HPP'}${description ? `\nProject context: ${description}` : ''}
 
 Write in English. Include:
 - Short intro (2 sentences)

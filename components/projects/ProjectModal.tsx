@@ -437,7 +437,7 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
                   const res  = await fetch('/api/ai/job-description', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ positionName, companyName, type, cooperationType }),
+                    body: JSON.stringify({ positionName, companyName, type, cooperationType, description }),
                   })
                   const json = await res.json()
                   if (json.text) setJobDescription(json.text)
