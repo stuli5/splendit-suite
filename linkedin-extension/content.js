@@ -16,6 +16,24 @@
     return ((el && (el.innerText || el.textContent)) || '').trim()
   }
 
+  /**
+   * Wait for a DOM element matching `selector` to appear.
+   * Resolves with the element, or null after `timeout` ms.
+   */
+  function waitForElement(selector, timeout = 5000) {
+    return new Promise((resolve) => {
+      const existing = document.querySelector(selector)
+      if (existing) { resolve(existing); return }
+
+      const timer = setTimeout(() => { obs.disconnect(); resolve(null) }, timeout)
+      const obs = new MutationObserver(() => {
+        const el = document.querySelector(selector)
+        if (el) { clearTimeout(timer); obs.disconnect(); resolve(el) }
+      })
+      obs.observe(document.body, { childList: true, subtree: true })
+    })
+  }
+
   function queryText(sel) {
     try {
       const el = document.querySelector(sel)
@@ -83,27 +101,34 @@
   }
 
   function extractHeadline() {
-    // 1. document.title headline part
+    // 1. document.title headline part (works for other people's profiles)
     const { headline: titleHeadline } = parseTitle()
     if (titleHeadline && titleHeadline.length > 2) return titleHeadline
 
-    // 2. Known DOM selectors
+    // 2. Known DOM selectors — ordered by specificity, covering LinkedIn 2023-2025 DOM
     const selectors = [
+      // 2025 top card
+      '.pv-text-details__left-panel .text-body-medium.break-words',
+      '.pv-text-details__left-panel div.text-body-medium',
+      // Generic fallbacks
       '.text-body-medium.break-words',
       'div.text-body-medium',
+      // Older versions
       '[data-field="headline"]',
       '.pv-top-card--experience-list-item',
+      // aria label fallback
+      'section.artdeco-card .text-body-medium',
     ]
     for (const sel of selectors) {
       const t = queryText(sel)
-      if (t && t.length < 300) return t
+      if (t && t.length > 3 && t.length < 300) return t
     }
 
-    // 3. DOM proximity: first meaningful sibling after h1
+    // 3. DOM proximity: first meaningful sibling/cousin after h1
     const h1 = document.querySelector('h1')
     if (h1) {
       let node = h1.parentElement
-      for (let depth = 0; depth < 4; depth++) {
+      for (let depth = 0; depth < 5; depth++) {
         if (!node) break
         const kids  = Array.from(node.children)
         const start = depth === 0 ? kids.indexOf(h1) + 1 : 0
@@ -219,10 +244,6 @@
     if (location) noteParts.push(`Location: ${location}`)
     if (about)    noteParts.push(`\nAbout:\n${about}`)
 
-    // DEBUG — remove after confirming extraction works
-    const _h1text = document.querySelector('h1') ? document.querySelector('h1').innerText.replace(/\n/g, ' ') : 'NOT FOUND'
-    noteParts.push(`\n--- DEBUG ---\ntitle: ${document.title}\nfirstName: ${firstName}\nlastName: ${lastName}\nh1: ${_h1text}`)
-
     return {
       firstName,
       lastName,
@@ -236,10 +257,37 @@
     }
   }
 
+  // ── CRM lookup ─────────────────────────────────────────────────────────────
+
+  function lookupCandidate(linkedInUrl) {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['apiUrl', 'apiKey'], ({ apiUrl, apiKey }) => {
+        if (!apiUrl || !apiKey) { resolve(null); return }
+        chrome.runtime.sendMessage(
+          { type: 'LOOKUP_CANDIDATE', apiUrl, apiKey, linkedInUrl },
+          (response) => {
+            if (chrome.runtime.lastError || !response) { resolve(null); return }
+            resolve(response)
+          }
+        )
+      })
+    })
+  }
+
   // ── Modal HTML ─────────────────────────────────────────────────────────────
 
-  function buildModal(data) {
+  function buildModal(data, mode) {
+    const isUpdate  = mode === 'update'
     const skillsStr = (data.skills || []).join(', ')
+    const title     = isUpdate ? 'Update in SplenditSuite' : 'Add to SplenditSuite'
+    const saveLbl   = isUpdate ? 'Update CRM →' : 'Save to CRM →'
+    const badge     = isUpdate
+      ? '<span class="spl-badge-update">Already in CRM</span>'
+      : ''
+
+    const stageOptions = ['new', 'screening', 'interview', 'offer'].map(s =>
+      `<option value="${s}"${data.stage === s ? ' selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+    ).join('')
 
     return `
 <div id="${OVERLAY_ID}" class="spl-overlay">
@@ -247,7 +295,8 @@
   <div class="spl-modal">
     <div class="spl-header">
       <div class="spl-logo">S</div>
-      <span class="spl-title">Add to SplenditSuite</span>
+      <span class="spl-title">${title}</span>
+      ${badge}
       <button class="spl-close" id="spl-close-btn">✕</button>
     </div>
 
@@ -291,12 +340,7 @@
 
       <div class="spl-field">
         <label>Stage</label>
-        <select id="spl-stage">
-          <option value="new" selected>New</option>
-          <option value="screening">Screening</option>
-          <option value="interview">Interview</option>
-          <option value="offer">Offer</option>
-        </select>
+        <select id="spl-stage">${stageOptions}</select>
       </div>
 
       <div class="spl-field">
@@ -310,7 +354,7 @@
     <div class="spl-footer">
       <button class="spl-btn-cancel" id="spl-cancel-btn">Cancel</button>
       <button class="spl-btn-save" id="spl-save-btn">
-        <span id="spl-save-label">Save to CRM →</span>
+        <span id="spl-save-label">${saveLbl}</span>
         <span id="spl-save-spinner" style="display:none">Saving...</span>
       </button>
     </div>
@@ -338,39 +382,77 @@
     btn.addEventListener('click', openModal)
     document.body.appendChild(btn)
 
-    // Pre-extract data after page has settled (lazy content loads ~2-3s)
-    setTimeout(() => {
-      cachedProfile = extractProfileData()
-    }, 3000)
+    // Wait for h1 (LinkedIn React renders it asynchronously), then cache profile
+    waitForElement('h1', 6000).then(() => {
+      // Extra tick to let sibling elements (headline, location) also render
+      setTimeout(() => { cachedProfile = extractProfileData() }, 300)
+    })
   }
 
   // ── Modal logic ────────────────────────────────────────────────────────────
 
-  function openModal() {
+  async function openModal() {
     if (document.getElementById(OVERLAY_ID)) return
 
-    // Always re-extract on open to get the freshest data;
-    // fall back to cache if extraction returns empty name
+    // Disable FAB while checking
+    const fab = document.getElementById(BUTTON_ID)
+    if (fab) { fab.disabled = true; fab.title = 'Checking CRM...' }
+
+    // Extract fresh profile data (or use cache)
     const fresh = extractProfileData()
-    const data  = (fresh.firstName || fresh.lastName)
-      ? fresh
-      : (cachedProfile || fresh)
+    let data    = (fresh.firstName || fresh.lastName) ? fresh : (cachedProfile || fresh)
+    // Make a mutable copy
+    data = Object.assign({}, data, { skills: (data.skills || []).slice() })
+
+    // Lookup whether this LinkedIn URL is already in CRM
+    let mode       = 'add'
+    let existingId = null
+
+    if (data.linkedIn) {
+      try {
+        const result = await lookupCandidate(data.linkedIn)
+        if (result && result.found && result.id) {
+          mode       = 'update'
+          existingId = result.id
+          const existing = result.candidate || {}
+
+          // Merge: keep manually-set CRM fields, refresh position/skills from LinkedIn
+          data = {
+            firstName: existing.firstName || data.firstName,
+            lastName:  existing.lastName  || data.lastName,
+            email:     existing.email     || data.email     || '',
+            phone:     existing.phone     || data.phone     || '',
+            stage:     existing.stage     || data.stage,
+            note:      existing.note      || data.note      || '',
+            linkedIn:  data.linkedIn,
+            // Prefer fresh LinkedIn data for these (the point of updating)
+            position:  data.position || existing.position   || '',
+            skills:    data.skills.length ? data.skills : (existing.skills || []),
+          }
+        }
+      } catch (_) {
+        // Lookup failed — proceed with add mode silently
+      }
+    }
+
+    if (fab) { fab.disabled = false; fab.title = 'Add to SplenditSuite CRM' }
 
     const div = document.createElement('div')
-    div.innerHTML = buildModal(data)
-    document.body.appendChild(div.firstElementChild)
+    div.innerHTML = buildModal(data, mode)
+    const overlay = div.firstElementChild
+    document.body.appendChild(overlay)
 
-    document.getElementById('spl-close-btn').addEventListener('click', closeModal)
-    document.getElementById('spl-cancel-btn').addEventListener('click', closeModal)
-    document.querySelector('.spl-backdrop').addEventListener('click', closeModal)
-    document.getElementById('spl-save-btn').addEventListener('click', handleSave)
+    overlay.querySelector('#spl-close-btn').addEventListener('click', closeModal)
+    overlay.querySelector('#spl-cancel-btn').addEventListener('click', closeModal)
+    overlay.querySelector('.spl-backdrop').addEventListener('click', closeModal)
+    overlay.querySelector('#spl-save-btn').addEventListener('click', () => handleSave(mode, existingId))
 
     // Focus first empty required field
-    const firstName = document.getElementById('spl-firstName')
-    const lastName  = document.getElementById('spl-lastName')
-    if (!firstName.value) firstName.focus()
-    else if (!lastName.value) lastName.focus()
-    else firstName.focus()
+    const firstNameEl = overlay.querySelector('#spl-firstName')
+    const lastNameEl  = overlay.querySelector('#spl-lastName')
+    if (firstNameEl && !firstNameEl.value) firstNameEl.focus()
+    else if (lastNameEl && !lastNameEl.value) lastNameEl.focus()
+    else if (firstNameEl) firstNameEl.focus()
 
     document.addEventListener('keydown', onKeyDown)
   }
@@ -385,7 +467,7 @@
     if (e.key === 'Escape') closeModal()
   }
 
-  async function handleSave() {
+  async function handleSave(mode, existingId) {
     const firstName = document.getElementById('spl-firstName').value.trim()
     const lastName  = document.getElementById('spl-lastName').value.trim()
     const position  = document.getElementById('spl-position').value.trim()
@@ -416,6 +498,10 @@
       ...(note     && { note }),
     }
 
+    if (mode === 'update' && existingId) {
+      payload.id = existingId
+    }
+
     setLoading(true)
 
     chrome.storage.sync.get(['apiUrl', 'apiKey'], ({ apiUrl, apiKey }) => {
@@ -425,9 +511,10 @@
         return
       }
 
-      // Send via background service worker — avoids LinkedIn's window.fetch interceptor
+      const msgType = mode === 'update' ? 'UPDATE_CANDIDATE' : 'IMPORT_CANDIDATE'
+
       chrome.runtime.sendMessage(
-        { type: 'IMPORT_CANDIDATE', apiUrl, apiKey, payload },
+        { type: msgType, apiUrl, apiKey, payload },
         (response) => {
           setLoading(false)
           if (chrome.runtime.lastError) {
@@ -438,7 +525,11 @@
             showError(`Error: ${(response && response.error) || 'Unknown error'}`)
             return
           }
-          showSuccess(firstName, lastName)
+          if (mode === 'update') {
+            showSuccessUpdate(firstName, lastName)
+          } else {
+            showSuccess(firstName, lastName)
+          }
         }
       )
     })
@@ -461,6 +552,15 @@
     const toast = document.createElement('div')
     toast.className = 'spl-toast'
     toast.innerHTML = `<span>✓</span> ${firstName} ${lastName} added to SplenditSuite`
+    document.body.appendChild(toast)
+    setTimeout(() => toast.remove(), 3500)
+  }
+
+  function showSuccessUpdate(firstName, lastName) {
+    closeModal()
+    const toast = document.createElement('div')
+    toast.className = 'spl-toast spl-toast-update'
+    toast.innerHTML = `<span>✓</span> ${firstName} ${lastName} updated in SplenditSuite`
     document.body.appendChild(toast)
     setTimeout(() => toast.remove(), 3500)
   }

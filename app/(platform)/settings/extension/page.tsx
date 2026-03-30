@@ -73,7 +73,18 @@ export default function ExtensionPage() {
               SplenditSuite LinkedIn Importer
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace' }}>
-              Chrome Extension · v1.0.0 · For internal use only
+              Chrome Extension · v1.1.0 · For internal use only
+            </div>
+            <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {['Auto-detects existing candidates', 'Update mode', 'Better headline extraction'].map(tag => (
+                <span key={tag} style={{
+                  padding: '2px 8px', borderRadius: 10,
+                  background: 'rgba(0,168,122,0.08)',
+                  border: '1px solid rgba(0,168,122,0.2)',
+                  fontSize: '0.68rem', color: 'var(--primary)',
+                  fontFamily: 'JetBrains Mono, monospace', fontWeight: 600,
+                }}>{tag}</span>
+              ))}
             </div>
           </div>
           <a

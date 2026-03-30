@@ -186,3 +186,8 @@ cp .env.example .env.local
 ### Dependencies
 - Run `npm audit` regularly — fix high/critical vulnerabilities
 - Do not add unmaintained packages without review
+
+## Pending Tasks
+
+> See `TODO.md` for the full task list. Key items:
+> - LinkedIn extension: fix headline extraction (MutationObserver), remove DEBUG block

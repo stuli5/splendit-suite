@@ -275,3 +275,28 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Update mode badge ────────────────────────────────────────────────────── */
+
+.spl-badge-update {
+  padding: 3px 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.spl-toast-update span {
+  background: #0091c7;
+}
+
+/* ── FAB disabled (checking) state ───────────────────────────────────────── */
+
+.spl-fab:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}

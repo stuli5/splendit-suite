@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SplenditSuite LinkedIn Importer",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Import LinkedIn profiles directly to SplenditSuite CRM with one click.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [

@@ -3,29 +3,55 @@
 // bypassing LinkedIn's window.fetch interceptor.
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.type !== 'IMPORT_CANDIDATE') return false
+  const base = (msg.apiUrl || '').replace(/\/$/, '')
 
-  const { apiUrl, apiKey, payload } = msg
-
-  fetch(`${apiUrl.replace(/\/$/, '')}/api/crm/linkedin-import`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(payload),
-  })
-    .then(async res => {
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        sendResponse({ ok: false, error: json.error || `HTTP ${res.status}` })
-      } else {
-        sendResponse({ ok: true, id: json.id })
-      }
+  if (msg.type === 'IMPORT_CANDIDATE') {
+    fetch(`${base}/api/crm/linkedin-import`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${msg.apiKey}`,
+      },
+      body: JSON.stringify(msg.payload),
     })
-    .catch(err => {
-      sendResponse({ ok: false, error: err.message })
-    })
+      .then(async res => {
+        const json = await res.json().catch(() => ({}))
+        sendResponse(res.ok ? { ok: true, id: json.id } : { ok: false, error: json.error || `HTTP ${res.status}` })
+      })
+      .catch(err => sendResponse({ ok: false, error: err.message }))
+    return true
+  }
 
-  return true // keep message channel open for async response
+  if (msg.type === 'UPDATE_CANDIDATE') {
+    fetch(`${base}/api/crm/linkedin-update`, {
+      method:  'PATCH',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${msg.apiKey}`,
+      },
+      body: JSON.stringify(msg.payload),
+    })
+      .then(async res => {
+        const json = await res.json().catch(() => ({}))
+        sendResponse(res.ok ? { ok: true } : { ok: false, error: json.error || `HTTP ${res.status}` })
+      })
+      .catch(err => sendResponse({ ok: false, error: err.message }))
+    return true
+  }
+
+  if (msg.type === 'LOOKUP_CANDIDATE') {
+    const url = encodeURIComponent(msg.linkedInUrl)
+    fetch(`${base}/api/crm/linkedin-lookup?url=${url}`, {
+      method:  'GET',
+      headers: { 'Authorization': `Bearer ${msg.apiKey}` },
+    })
+      .then(async res => {
+        const json = await res.json().catch(() => ({}))
+        sendResponse(res.ok ? json : { ok: false, error: json.error || `HTTP ${res.status}` })
+      })
+      .catch(err => sendResponse({ ok: false, error: err.message }))
+    return true
+  }
+
+  return false
 })
