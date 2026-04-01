@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getCompanies } from '@/lib/companies'
 import { createProject, updateProject } from '@/lib/projects'
+import { authFetch } from '@/lib/auth-fetch'
 import { getPeople } from '@/lib/meet-visu'
 import type { Company, Person } from '@/lib/types'
 import type { Project, ProjectPhase, ProjectType, ProjectStatus, CooperationType } from '@/lib/types'
@@ -434,7 +435,7 @@ export default function ProjectModal({ project, onClose, onSaved }: Props) {
                 disabled={!positionName.trim() || genJD}
                 onClick={async () => {
                   setGenJD(true)
-                  const res  = await fetch('/api/ai/job-description', {
+                  const res  = await authFetch('/api/ai/job-description', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ positionName, companyName, type, cooperationType, description }),

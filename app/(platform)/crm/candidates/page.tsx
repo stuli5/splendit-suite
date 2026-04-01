@@ -185,11 +185,26 @@ export default function CandidatesPage() {
         rows = parseCsvBuffer(buffer)
         console.log('[recru-import] parsed CSV rows:', rows.length, 'first:', rows[0])
       } else {
-        const _xlsx = await import('xlsx')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const XLSX  = (_xlsx as any).default ?? _xlsx
-        const wb    = XLSX.read(buffer, { type: 'array' })
-        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]) as Record<string, unknown>[]
+        const ExcelJS = (await import('exceljs')).default
+        const workbook = new ExcelJS.Workbook()
+        await workbook.xlsx.load(buffer)
+        const worksheet = workbook.getWorksheet(1)
+        if (!worksheet) throw new Error('No worksheet found')
+        const headers: string[] = []
+        rows = []
+        worksheet.eachRow((row, rowNum) => {
+          if (rowNum === 1) {
+            for (let i = 1; i <= (row as { cellCount: number }).cellCount; i++) {
+              headers[i - 1] = String(row.getCell(i).value ?? '')
+            }
+          } else {
+            const obj: Record<string, unknown> = {}
+            for (let i = 0; i < headers.length; i++) {
+              if (headers[i]) obj[headers[i]] = row.getCell(i + 1).value
+            }
+            rows.push(obj)
+          }
+        })
       }
 
       let ok = 0; let fail = 0
@@ -214,13 +229,15 @@ export default function CandidatesPage() {
         const candidate = {
           firstName,
           lastName,
-          position:  String(row['Pozice'] ?? '').trim(),
-          email:     String(row['Email'] ?? '').trim() || undefined,
+          position:     String(row['Pozice'] ?? '').trim(),
+          email:        String(row['Email'] ?? '').trim() || undefined,
           phone,
           note,
-          skills:    skills.length ? skills : undefined,
-          recruId:   String(row['ID'] ?? '').trim() || undefined,
-          createdAt: Date.now(),
+          skills:       skills.length ? skills : undefined,
+          recruId:      String(row['ID'] ?? '').trim() || undefined,
+          source:       'recru' as const,
+          stageHistory: [{ stage: 'new' as const, ts: Date.now() }],
+          createdAt:    Date.now(),
         }
 
         const doc = Object.fromEntries(Object.entries(candidate).filter(([, v]) => v !== undefined))

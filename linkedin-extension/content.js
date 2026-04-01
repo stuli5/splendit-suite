@@ -101,27 +101,32 @@
   }
 
   function extractHeadline() {
-    // 1. document.title headline part (works for other people's profiles)
+    // 1. document.title headline part (works for OTHER people's profiles)
     const { headline: titleHeadline } = parseTitle()
     if (titleHeadline && titleHeadline.length > 2) return titleHeadline
 
     // 2. Known DOM selectors — ordered by specificity, covering LinkedIn 2023-2025 DOM
+    //    including own-profile variants where title has no headline
     const selectors = [
-      // 2025 top card
+      // 2025 own profile top card
+      '.ph5 .text-body-medium.break-words',
+      '.pb2.text-body-medium.break-words',
+      // 2024-2025 pv-text-details panel
       '.pv-text-details__left-panel .text-body-medium.break-words',
       '.pv-text-details__left-panel div.text-body-medium',
-      // Generic fallbacks
+      // Generic
       '.text-body-medium.break-words',
+      'div.text-body-medium.break-words',
       'div.text-body-medium',
       // Older versions
       '[data-field="headline"]',
       '.pv-top-card--experience-list-item',
-      // aria label fallback
-      'section.artdeco-card .text-body-medium',
+      'h2.text-body-medium',
     ]
     for (const sel of selectors) {
       const t = queryText(sel)
-      if (t && t.length > 3 && t.length < 300) return t
+      // Skip values that are clearly not a headline (e.g. connection count)
+      if (t && t.length > 3 && t.length < 300 && !/^\d+/.test(t)) return t
     }
 
     // 3. DOM proximity: first meaningful sibling/cousin after h1
@@ -134,7 +139,7 @@
         const start = depth === 0 ? kids.indexOf(h1) + 1 : 0
         for (let i = start; i < kids.length; i++) {
           const t = elText(kids[i])
-          if (t && t.length > 5 && t.length < 300 && !t.includes('\n\n')) return t
+          if (t && t.length > 5 && t.length < 300 && !t.includes('\n\n') && !/^\d+/.test(t)) return t
         }
         node = node.parentElement
       }
@@ -370,6 +375,40 @@
       .replace(/>/g, '&gt;')
   }
 
+  // ── Skills lazy-load trigger ───────────────────────────────────────────────
+
+  /**
+   * LinkedIn lazy-loads the #skills section — it's not in the DOM until the
+   * user scrolls to it. This function scrolls to the section, waits for the
+   * content to appear, then scrolls back to the top so the user doesn't notice.
+   */
+  async function ensureSkillsLoaded() {
+    // Already loaded — nothing to do
+    if (document.querySelector('#skills span[aria-hidden="true"]')) return
+
+    const section = document.querySelector('#skills')
+    if (!section) return
+
+    const prevScrollY = window.scrollY
+    section.scrollIntoView({ behavior: 'instant', block: 'center' })
+
+    // Wait up to 2 s for skill items to appear
+    await new Promise((resolve) => {
+      const deadline = Date.now() + 2000
+      const check = setInterval(() => {
+        if (document.querySelector('#skills span[aria-hidden="true"]') || Date.now() >= deadline) {
+          clearInterval(check)
+          resolve()
+        }
+      }, 150)
+    })
+
+    // Scroll back so the user sees the top of the profile
+    window.scrollTo({ top: prevScrollY, behavior: 'instant' })
+    // Small settle pause before we read the DOM
+    await new Promise(resolve => setTimeout(resolve, 150))
+  }
+
   // ── FAB button ─────────────────────────────────────────────────────────────
 
   function injectFab() {
@@ -383,9 +422,12 @@
     document.body.appendChild(btn)
 
     // Wait for h1 (LinkedIn React renders it asynchronously), then cache profile
-    waitForElement('h1', 6000).then(() => {
+    waitForElement('h1', 6000).then(async () => {
       // Extra tick to let sibling elements (headline, location) also render
-      setTimeout(() => { cachedProfile = extractProfileData() }, 300)
+      await new Promise(resolve => setTimeout(resolve, 400))
+      // Trigger skills lazy-load before caching
+      await ensureSkillsLoaded()
+      cachedProfile = extractProfileData()
     })
   }
 
@@ -398,9 +440,19 @@
     const fab = document.getElementById(BUTTON_ID)
     if (fab) { fab.disabled = true; fab.title = 'Checking CRM...' }
 
+    // If skills haven't been loaded yet, trigger lazy-load now
+    if (!document.querySelector('#skills span[aria-hidden="true"]')) {
+      await ensureSkillsLoaded()
+    }
+
     // Extract fresh profile data (or use cache)
     const fresh = extractProfileData()
     let data    = (fresh.firstName || fresh.lastName) ? fresh : (cachedProfile || fresh)
+    // Prefer cached skills if fresh extraction missed them (lazy-load race)
+    if ((!fresh.skills || !fresh.skills.length) && cachedProfile && cachedProfile.skills && cachedProfile.skills.length) {
+      fresh.skills = cachedProfile.skills.slice()
+    }
+
     // Make a mutable copy
     data = Object.assign({}, data, { skills: (data.skills || []).slice() })
 

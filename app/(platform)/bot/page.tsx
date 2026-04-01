@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -39,7 +40,7 @@ export default function BotPage() {
     setLoading(true)
 
     try {
-      const res  = await fetch('/api/ai/bot-chat', {
+      const res  = await authFetch('/api/ai/bot-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: updated.map(m => ({ role: m.role, content: m.content })) }),

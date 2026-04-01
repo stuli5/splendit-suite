@@ -4,6 +4,7 @@ import { useRef, useState, KeyboardEvent } from 'react'
 import { createCRMCandidate, updateCRMCandidate, uploadCandidateCV, deleteCandidateCV } from '@/lib/crm-candidates'
 import type { CRMCandidate, CRMStage } from '@/lib/types'
 import { useAuth } from '@/lib/auth-context'
+import { authFetch } from '@/lib/auth-fetch'
 
 interface Props {
   candidate?: CRMCandidate
@@ -64,7 +65,7 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
     form.append('file', file)
 
     try {
-      const res  = await fetch('/api/parse-cv', { method: 'POST', body: form })
+      const res  = await authFetch('/api/parse-cv', { method: 'POST', body: form })
       const json = await res.json()
 
       if (!res.ok || !json.data) {
@@ -118,6 +119,7 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
     if (candidate) {
       await updateCRMCandidate(candidate.id, data, actor ? { actor, entityName } : undefined)
     } else {
+      data.source = 'manual'
       savedId = await createCRMCandidate(data, actor)
     }
 

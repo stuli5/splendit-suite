@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { askClaude } from '@/lib/ai'
+import { requireAuth } from '@/lib/api-auth'
 
 const SYSTEM = `You are SplenditBot, the AI assistant for SplenditSuite — an internal IT recruitment platform used by Splendit, a Czech IT staffing company.
 
@@ -24,6 +25,9 @@ You can help with:
 Be concise, professional, and helpful. Respond in the same language the user writes in (Czech, Slovak, or English).`
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req)
+  if (auth.error) return auth.error
+
   const { messages } = await req.json()
   if (!messages || !Array.isArray(messages)) {
     return NextResponse.json({ error: 'Missing messages' }, { status: 400 })

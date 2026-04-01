@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 import Link from 'next/link'
 import { getProjects } from '@/lib/projects'
 import { getCRMCandidates } from '@/lib/crm-candidates'
@@ -63,7 +64,7 @@ export default function DashboardPage() {
   async function handleAiInsights() {
     if (!stats) return
     setLoading(true)
-    const res  = await fetch('/api/ai/dashboard-insights', {
+    const res  = await authFetch('/api/ai/dashboard-insights', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stats }),

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { deleteMeet, parseActions, updateMeet, initials } from '@/lib/meet-visu'
 import type { Meet, Person, Tribe } from '@/lib/types'
+import { authFetch } from '@/lib/auth-fetch'
 import MeetModal from './MeetModal'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -244,7 +245,7 @@ function MeetDetail({ meet, people, tribes, onBack, onEdit, onDelete, onToggleAc
   async function handleAiSummary() {
     if (!meet.transcript?.trim()) return alert('Add a transcript first.')
     setSummarizing(true)
-    const res  = await fetch('/api/ai/meeting-summary', {
+    const res  = await authFetch('/api/ai/meeting-summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ transcript: meet.transcript, agenda: meet.agenda, meetName: meet.name }),

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
 import { collection, getDocs, query, orderBy, limit, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Candidate, CandidateRating, CandidateStatus, QuestionAnswer } from '@/lib/types'
@@ -429,7 +430,7 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
     setLoadingAi(true)
     setShowAi(true)
     // AI Assessment
-    const assessRes = await fetch('/api/ai/ims-assessment', {
+    const assessRes = await authFetch('/api/ai/ims-assessment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -447,7 +448,7 @@ function CandidateCard({ candidate, onRefresh }: { candidate: Candidate; onRefre
     if (assessJson.assessment) setAiAssessment(assessJson.assessment)
 
     // AI follow-up questions
-    const qRes  = await fetch('/api/ai/interview-questions', {
+    const qRes  = await authFetch('/api/ai/interview-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ position: candidate.position, difficulty: 'medium', count: 4 }),

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { askClaude, extractJson } from '@/lib/ai'
+import { requireAuth } from '@/lib/api-auth'
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req)
+  if (auth.error) return auth.error
+
   const { position, difficulty, count = 5 } = await req.json()
   if (!position) return NextResponse.json({ error: 'Missing position' }, { status: 400 })
 

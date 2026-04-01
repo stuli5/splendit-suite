@@ -41,12 +41,15 @@ export async function POST(req: NextRequest) {
     ? body.skills.filter((s): s is string => typeof s === 'string').slice(0, 30)
     : []
 
+  const stage = validateStage(body.stage)
   const candidate = {
     firstName,
     lastName,
     position,
-    stage:     validateStage(body.stage),
-    createdAt: Date.now(),
+    stage,
+    source:       'linkedin' as const,
+    stageHistory: [{ stage, ts: Date.now() }],
+    createdAt:    Date.now(),
     ...(typeof body.email    === 'string' && body.email    && { email:    body.email.trim() }),
     ...(typeof body.phone    === 'string' && body.phone    && { phone:    body.phone.trim() }),
     ...(typeof body.linkedIn === 'string' && body.linkedIn && { linkedIn: body.linkedIn.trim() }),

@@ -17,7 +17,7 @@
 
 const path   = require('path')
 const fs     = require('fs')
-const XLSX   = require('xlsx')
+const ExcelJS = require('exceljs')
 const { initializeApp } = require('firebase/app')
 const { getFirestore, collection, addDoc } = require('firebase/firestore')
 
@@ -153,10 +153,28 @@ async function main() {
   }
 
   console.log('Reading:', absPath)
-  const workbook  = XLSX.readFile(absPath)
-  const sheetName = workbook.SheetNames[0]
-  const rows      = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName])
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.readFile(absPath)
+  const worksheet = workbook.getWorksheet(1)
+  if (!worksheet) { console.error('No worksheet found'); process.exit(1) }
 
+  const headers = []
+  const rows = []
+  worksheet.eachRow((row, rowNum) => {
+    if (rowNum === 1) {
+      for (let i = 1; i <= row.cellCount; i++) {
+        headers[i - 1] = String(row.getCell(i).value ?? '')
+      }
+    } else {
+      const obj = {}
+      for (let i = 0; i < headers.length; i++) {
+        if (headers[i]) obj[headers[i]] = row.getCell(i + 1).value
+      }
+      rows.push(obj)
+    }
+  })
+
+  const sheetName = worksheet.name
   console.log(`Found ${rows.length} rows in sheet "${sheetName}"`)
 
   const candidates = rows.map(mapRow).filter(Boolean)

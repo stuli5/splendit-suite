@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { requireAuth } from '@/lib/api-auth'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -19,6 +20,9 @@ const EXTRACT_PROMPT = `Extract candidate information from this CV/resume. Retur
 For "skills", extract a concise list of up to 20 technical and professional skills (programming languages, frameworks, tools, methodologies, soft skills). Each skill should be a short label (1-3 words).`
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req)
+  if (auth.error) return auth.error
+
   const formData = await req.formData().catch(() => null)
   if (!formData) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 

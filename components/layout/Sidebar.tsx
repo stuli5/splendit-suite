@@ -10,6 +10,7 @@ import NotificationBell from './NotificationBell'
 const modules = [
   { href: '/dashboard',       icon: '⬡', label: 'Dashboard' },
   { href: '/crm/candidates',  icon: '👤', label: 'Candidates' },
+  { href: '/crm/analytics',  icon: '📊', label: 'Funnel Analytics' },
   { href: '/crm/spolecnosti', icon: '🏢', label: 'Companies' },
   { href: '/crm/projekty',    icon: '📁', label: 'Projects' },
   { href: '/ims',             icon: '🎯', label: 'IMS' },

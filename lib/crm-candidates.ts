@@ -1,4 +1,4 @@
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, orderBy, query, arrayUnion } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
 import type { CRMCandidate, ActorInfo } from './types'
@@ -18,7 +18,9 @@ export async function createCRMCandidate(
   data:   Omit<CRMCandidate, 'id' | 'createdAt'>,
   actor?: ActorInfo,
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, 'crmCandidates'), { ...data, createdAt: Date.now() })
+  const initialStage = data.stage ?? 'new'
+  const stageHistory = data.stageHistory ?? [{ stage: initialStage, ts: Date.now() }]
+  const docRef = await addDoc(collection(db, 'crmCandidates'), { ...data, stageHistory, createdAt: Date.now() })
   if (actor) {
     const entityName = `${data.firstName} ${data.lastName}`
     notify({ action: 'candidate.created', entityType: 'candidate', entityId: docRef.id, entityName, actor })
@@ -32,7 +34,11 @@ export async function updateCRMCandidate(
   data: Partial<CRMCandidate>,
   meta?: ActivityMeta,
 ): Promise<void> {
-  await updateDoc(doc(db, 'crmCandidates', id), data)
+  const update: Record<string, unknown> = { ...data }
+  if ('stage' in data && data.stage) {
+    update.stageHistory = arrayUnion({ stage: data.stage, ts: Date.now() })
+  }
+  await updateDoc(doc(db, 'crmCandidates', id), update)
   if (meta) {
     const action = 'stage' in data ? 'candidate.stage_changed' : 'candidate.updated'
     notify({ action, entityType: 'candidate', entityId: id, entityName: meta.entityName, actor: meta.actor })

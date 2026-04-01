@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { authFetch } from '@/lib/auth-fetch'
 import { getProject } from '@/lib/projects'
 import { getProjectCandidates, addCandidateToProject, updateCandidatePhase, updateProjectCandidate, removeCandidateFromProject } from '@/lib/project-candidates'
 import { getCRMCandidates } from '@/lib/crm-candidates'
@@ -114,7 +115,7 @@ function CandidateDrawer({
 
   async function handleFitScore() {
     setLoadingFit(true)
-    const res  = await fetch('/api/ai/fit-score', {
+    const res  = await authFetch('/api/ai/fit-score', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ candidate: { firstName: pc.candidateFirstName, lastName: pc.candidateLastName, position: pc.candidatePosition }, project }),
@@ -714,7 +715,7 @@ export default function ProjectDetailPage() {
     const alreadyIn     = new Set(pcList.map(p => p.candidateId))
     const available     = allCandidates.filter(c => !alreadyIn.has(c.id))
     if (!available.length) { setMatching(false); return }
-    const res  = await fetch('/api/ai/candidate-match', {
+    const res  = await authFetch('/api/ai/candidate-match', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ project, candidates: available }),

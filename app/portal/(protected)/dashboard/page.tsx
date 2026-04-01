@@ -10,6 +10,7 @@ import {
   type PortalSubmission, type SubmissionType,
 } from '@/lib/portal'
 import { useRouter } from 'next/navigation'
+import { authFetch } from '@/lib/auth-fetch'
 
 export default function PortalDashboard() {
   const { candidate }     = usePortalAuth()
@@ -195,7 +196,7 @@ function UploadModal({ candidate, userId, onClose, onSuccess }: UploadModalProps
         uploadedAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as never,
       }
       // Fire-and-forget email notification
-      fetch('/api/portal/notify', {
+      authFetch('/api/portal/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

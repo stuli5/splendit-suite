@@ -30,22 +30,32 @@ export interface Company {
 
 export type CRMStage = 'new' | 'screening' | 'interview' | 'offer'
 
+export type CandidateSource = 'linkedin' | 'recru' | 'manual' | 'portal'
+
+export interface StageHistoryEntry {
+  stage: CRMStage
+  ts:    number
+}
+
 export interface CRMCandidate {
-  id:        string
-  firstName: string
-  lastName:  string
-  position:  string
-  stage?:    CRMStage
-  linkedIn?: string
-  gitHub?:   string
-  email?:    string
-  phone?:    string
-  note?:     string
-  skills?:   string[]
-  imsId?:    string
-  cvUrl?:    string
-  cvName?:   string
-  createdAt: number
+  id:           string
+  firstName:    string
+  lastName:     string
+  position:     string
+  stage?:       CRMStage
+  linkedIn?:    string
+  gitHub?:      string
+  email?:       string
+  phone?:       string
+  note?:        string
+  skills?:      string[]
+  imsId?:       string
+  cvUrl?:       string
+  cvName?:      string
+  source?:      CandidateSource
+  stageHistory?: StageHistoryEntry[]
+  createdAt:    number
+  updatedAt?:   number
 }
 
 // ─── Project Candidates (pipeline) ───────────────────────────────────────────
