@@ -44,6 +44,11 @@ export default function MeetsTab({ meets, people, tribes, pendingMeet, onClearPe
       m.tribe?.toLowerCase().includes(q)
     const matchTribe = !tribeFilter || m.tribe === tribeFilter
     return matchSearch && matchTribe
+  }).sort((a, b) => {
+    if (!a.date && !b.date) return 0
+    if (!a.date) return 1
+    if (!b.date) return -1
+    return b.date.localeCompare(a.date)
   })
 
   const allTribes = [...new Set(meets.map(m => m.tribe).filter(Boolean))]
