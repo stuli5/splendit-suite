@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createMeet, updateMeet, parseActions, serializeActions, initials } from '@/lib/meet-visu'
-import type { Meet, Person, Tribe, MeetType, ActionItem } from '@/lib/types'
+import { getTeamMembers } from '@/lib/team'
+import type { Meet, Person, Tribe, MeetType, ActionItem, TeamMember } from '@/lib/types'
 
 const MEET_TYPES: MeetType[] = ['Planning', 'Retrospective', 'Standup', 'Review', '1:1', 'Stakeholder', 'Other']
 
@@ -40,6 +41,7 @@ export default function MeetModal({ meet, people, tribes, onClose, onSaved }: Pr
     })
   })
   const [actions, setActions]     = useState<ActionItem[]>(() => parseActions(meet?.actions ?? ''))
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [saving, setSaving]       = useState(false)
   const [acQuery, setAcQuery]     = useState('')
   const [acOpen, setAcOpen]       = useState(false)
@@ -58,6 +60,10 @@ export default function MeetModal({ meet, people, tribes, onClose, onSaved }: Pr
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    getTeamMembers().then(setTeamMembers).catch(() => {})
   }, [])
 
   function addParticipant(p: Person) {
@@ -236,12 +242,16 @@ export default function MeetModal({ meet, people, tribes, onClose, onSaved }: Pr
                     placeholder="Task..."
                     style={{ ...inp, flex: 2 }}
                   />
-                  <input
+                  <select
                     value={a.assignee}
                     onChange={e => updateAction(i, 'assignee', e.target.value)}
-                    placeholder="Assignee"
                     style={{ ...inp, flex: 1 }}
-                  />
+                  >
+                    <option value="">Assignee</option>
+                    {teamMembers.map(m => (
+                      <option key={m.uid} value={m.displayName}>{m.displayName}</option>
+                    ))}
+                  </select>
                   <input
                     type="date"
                     value={a.deadline}

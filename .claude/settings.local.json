@@ -2,8 +2,82 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npx jest:*)",
+      "Bash(npx firebase:*)",
+      "Bash(node scripts/*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(firebase --version)",
+      "Bash(firebase projects:list)",
+      "Skill(update-config)",
+      "Bash(mkdir -p \"D:/splendit-suite/public/extension\")",
+      "Bash(zip -r \"../public/extension/splendit-linkedin-importer.zip\" .)",
+      "Bash(powershell -Command \"Compress-Archive -Path * -DestinationPath ''../public/extension/splendit-linkedin-importer.zip'' -Force\")",
+      "Bash(python:*)",
+      "Bash(\"D:/splendit-suite/.env.local\")",
+      "Bash(firebase apphosting:secrets:set LINKEDIN_IMPORT_KEY)",
+      "Bash(powershell -Command \":*)",
+      "Bash(python3 -c \":*)",
+      "Bash(firebase apphosting:secrets:access LINKEDIN_IMPORT_KEY)",
+      "Bash(firebase apphosting:backends:list)",
+      "Bash(firebase deploy:*)",
+      "Bash(nslookup:*)",
+      "Bash(gcloud version:*)",
+      "Bash(firebase apphosting:rollouts:create splendit-suite-backend --git-branch main)",
+      "Bash(powershell -Command \"Compress-Archive -Path manifest.json,background.js,content.js,styles.css,popup.html,popup.js,icons -DestinationPath ../public/extension/splendit-linkedin-importer.zip -Force\")",
+      "Bash(powershell -Command \"Compress-Archive -Path manifest.json,background.js,content.js,styles.css,popup.html,popup.js,icon16.png,icon48.png,icon128.png -DestinationPath ../public/extension/splendit-linkedin-importer.zip -Force\")",
+      "WebFetch(domain:thehackernews.com)",
+      "Bash(npm audit:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(mv:*)",
+      "Bash(cmd /c \"gcloud version\")",
+      "Bash(cmd /c \"where gcloud\" 2>&1)",
+      "Bash(powershell -Command \"gcloud version\")",
+      "Bash(powershell -Command \"Get-ChildItem 'C:\\\\Users\\\\stuli\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK' -ErrorAction SilentlyContinue | Select-Object Name\" 2>&1)",
+      "Bash(node dist/index.js)",
+      "Bash(FIREBASE_PROJECT_ID=interview-system-4cbf9 GOOGLE_APPLICATION_CREDENTIALS=\"D:/splendit-suite/mcp-server/interview-system-4cbf9-firebase-adminsdk-fbsvc-d32709ed5a.json\" node D:/splendit-suite/mcp-server/dist/index.js)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(FIREBASE_PROJECT_ID=interview-system-4cbf9 GOOGLE_APPLICATION_CREDENTIALS=\"D:/splendit-suite/mcp-server/interview-system-4cbf9-firebase-adminsdk-fbsvc-d32709ed5a.json\" timeout 5 node D:/splendit-suite/mcp-server/dist/index.js)"
+    ],
+    "deny": [
+      "Bash(node -e:*)",
+      "Bash(node --input-type=module -e:*)",
+      "Bash(rm -rf:*)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | bash)",
+      "Bash(cat .env*)",
+      "Bash(echo * > .env*)",
+      "Bash(git push --force:*)",
+      "Bash(firebase deploy --only firestore:rules)",
+      "Bash(sudo:*)",
+      "Bash(chmod 777:*)",
+      "Bash(ssh:*)",
+      "Bash(* > /dev/*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Review the file that was just written or edited for security vulnerabilities (injection, XSS, secrets, auth bypass, etc.). File path and tool input: $ARGUMENTS",
+            "timeout": 60,
+            "statusMessage": "Running security review..."
+          }
+        ]
+      }
     ]
   }
 }
