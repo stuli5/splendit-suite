@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { subscribeMeets, subscribePeople, subscribeTribes } from '@/lib/meet-visu'
 import type { Meet, Person, Tribe } from '@/lib/types'
 import MeetsTab from '@/components/meet-visu/MeetsTab'
@@ -18,13 +19,14 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ]
 
 export default function MeetVisualizerPage() {
+  const searchParams = useSearchParams()
   const [tab,     setTab]     = useState<Tab>('meets')
   const [meets,   setMeets]   = useState<Meet[]>([])
   const [people,  setPeople]  = useState<Person[]>([])
   const [tribes,  setTribes]  = useState<Tribe[]>([])
   const [loading, setLoading] = useState(true)
 
-  // For opening a specific meet from Dashboard
+  // For opening a specific meet from Dashboard or notification
   const [pendingMeet, setPendingMeet] = useState<Meet | null>(null)
 
   useEffect(() => {
@@ -37,6 +39,17 @@ export default function MeetVisualizerPage() {
 
     return () => { unsub1(); unsub2(); unsub3() }
   }, [])
+
+  // Open meet from ?meetId= URL param (e.g. from notification click)
+  useEffect(() => {
+    const meetId = searchParams.get('meetId')
+    if (!meetId || loading) return
+    const found = meets.find(m => m.id === meetId)
+    if (found) {
+      setPendingMeet(found)
+      setTab('meets')
+    }
+  }, [searchParams, meets, loading])
 
   function handleOpenMeet(meet: Meet) {
     setPendingMeet(meet)

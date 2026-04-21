@@ -1,8 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/lib/use-notifications'
 import type { AppNotification } from '@/lib/types'
+
+const ENTITY_ROUTES: Partial<Record<string, string>> = {
+  meet:              '/meet-visualizer',
+  candidate:         '/crm/candidates',
+  project:           '/crm/projects',
+  project_candidate: '/crm/candidates',
+}
 
 const TYPE_COLORS: Record<string, string> = {
   success: '#00a87a',
@@ -23,6 +31,7 @@ interface Props {
 export default function NotificationBell({ userId }: Props) {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications(userId)
   const [open, setOpen] = useState(false)
+  const router = useRouter()
 
   function handleOpen() {
     setOpen(o => !o)
@@ -42,6 +51,14 @@ export default function NotificationBell({ userId }: Props) {
 
   function handleNotificationClick(n: AppNotification) {
     if (!n.read) markRead(n.id)
+    const base = ENTITY_ROUTES[n.entityType]
+    if (base) {
+      const url = n.entityType === 'meet'
+        ? `${base}?meetId=${n.entityId}`
+        : `${base}?id=${n.entityId}`
+      setOpen(false)
+      router.push(url)
+    }
   }
 
   return (
@@ -155,7 +172,7 @@ export default function NotificationBell({ userId }: Props) {
                       padding: '11px 16px',
                       borderBottom: '1px solid rgba(0,168,122,0.06)',
                       background: n.read ? 'transparent' : 'rgba(0,168,122,0.04)',
-                      cursor: n.read ? 'default' : 'pointer',
+                      cursor: ENTITY_ROUTES[n.entityType] ? 'pointer' : 'default',
                       display: 'flex', gap: 10, alignItems: 'flex-start',
                       transition: 'background 0.1s',
                     }}
@@ -184,7 +201,7 @@ export default function NotificationBell({ userId }: Props) {
                       <div style={{
                         fontSize: '0.72rem', color: 'var(--text-dim)',
                         fontFamily: 'JetBrains Mono, monospace', marginTop: 2,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        lineHeight: 1.4,
                       }}>
                         {n.body}
                       </div>
