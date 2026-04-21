@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { createMeet, updateMeet, parseActions, serializeActions, initials } from '@/lib/meet-visu'
 import { getTeamMembers } from '@/lib/team'
+import { createNotification } from '@/lib/notifications'
+import { useAuth } from '@/lib/auth-context'
 import type { Meet, Person, Tribe, MeetType, ActionItem, TeamMember } from '@/lib/types'
 
 const MEET_TYPES: MeetType[] = ['Planning', 'Retrospective', 'Standup', 'Review', '1:1', 'Stakeholder', 'Other']
@@ -23,6 +25,7 @@ const inp: React.CSSProperties = {
 }
 
 export default function MeetModal({ meet, people, tribes, onClose, onSaved }: Props) {
+  const { user } = useAuth()
   const today = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState({
     name:         meet?.name         ?? '',
@@ -102,11 +105,40 @@ export default function MeetModal({ meet, people, tribes, onClose, onSaved }: Pr
       participants: participants.map(p => p.name).join(', '),
       actions:      serializeActions(actions),
     }
+    let savedId: string
     if (meet) {
       await updateMeet(meet.id, data)
+      savedId = meet.id
     } else {
-      await createMeet(data)
+      savedId = await createMeet(data)
     }
+
+    // notify newly assigned team members
+    if (user) {
+      const oldAssignees = new Set(
+        parseActions(meet?.actions ?? '').map(a => a.assignee).filter(Boolean)
+      )
+      const newlyAssigned = actions.filter(a =>
+        a.assignee && !oldAssignees.has(a.assignee)
+      )
+      const actorName = user.displayName ?? user.email ?? 'Someone'
+      await Promise.all(
+        newlyAssigned.map(a => {
+          const member = teamMembers.find(m => m.displayName === a.assignee)
+          if (!member || member.uid === user.uid) return Promise.resolve()
+          return createNotification({
+            userId:     member.uid,
+            title:      'New action item assigned',
+            body:       `${actorName} assigned you: "${a.task}" in ${form.name}${a.deadline ? ` — deadline ${a.deadline}` : ''}`,
+            entityType: 'meet',
+            entityId:   savedId,
+            type:       'info',
+            actorUid:   user.uid,
+          })
+        })
+      )
+    }
+
     onSaved()
   }
 

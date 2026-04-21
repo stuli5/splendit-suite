@@ -273,7 +273,7 @@ export interface ActorInfo {
   email:       string
 }
 
-export type ActivityEntityType = 'candidate' | 'project' | 'project_candidate'
+export type ActivityEntityType = 'candidate' | 'project' | 'project_candidate' | 'meet'
 
 export type ActivityAction =
   | 'candidate.created'
