@@ -29,6 +29,8 @@ env:
     secret: RESEND_API_KEY
   - variable: LINKEDIN_IMPORT_KEY
     secret: LINKEDIN_IMPORT_KEY
+  - variable: MCP_API_KEY
+    secret: MCP_API_KEY
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyBiv8l8NO4nGFWyjhQe5WzXLxv58H03lHs
     availability:
