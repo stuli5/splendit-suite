@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "splendit-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./mcp-server/dist/index.js"
+      ],
+      "env": {
+        "FIREBASE_PROJECT_ID": "interview-system-4cbf9"
+      }
+    }
+  }
+}
