@@ -13,8 +13,9 @@ export async function getContracts(): Promise<Contract[]> {
 }
 
 export async function createContract(data: Omit<Contract, 'id' | 'createdAt'>): Promise<string> {
+  const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined))
   const ref = await addDoc(collection(db, 'contracts'), {
-    ...data,
+    ...clean,
     createdAt: Date.now(),
   })
   return ref.id
