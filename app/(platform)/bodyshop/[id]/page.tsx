@@ -283,7 +283,7 @@ export default function ContractDetailPage() {
                 type="number"
                 min="0"
                 max="31"
-                step="0.5"
+                step="any"
                 value={wDays}
                 onChange={e => setWDays(e.target.value)}
                 placeholder="e.g. 20"
