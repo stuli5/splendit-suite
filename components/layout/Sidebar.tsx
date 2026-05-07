@@ -18,6 +18,7 @@ const modules = [
   { href: '/deal-radar',      icon: '📡', label: 'Deal Radar' },
   { href: '/bodyshop',        icon: '🏗', label: 'Bodyshop' },
   { href: '/bot',             icon: '🤖', label: 'SplenditBot' },
+  { href: '/jobs',            icon: '💼', label: 'Jobs' },
 ]
 
 export default function Sidebar() {

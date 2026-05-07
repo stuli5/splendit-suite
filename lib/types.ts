@@ -332,3 +332,43 @@ export interface Worklog {
   profit: number           // revenue - cost
   createdAt: number
 }
+
+// ─── Jobs ─────────────────────────────────────────────────────────────────────
+
+export type JobStatus = 'draft' | 'published' | 'closed'
+export type JobType   = 'full-time' | 'part-time' | 'contract' | 'freelance'
+export type WorkMode  = 'remote' | 'hybrid' | 'onsite'
+
+export interface Job {
+  id:           string
+  title:        string
+  slug:         string
+  location:     string
+  workMode:     WorkMode
+  type:         JobType
+  salaryMin?:   number
+  salaryMax?:   number
+  currency:     'CZK' | 'EUR'
+  description:  string
+  requirements?: string
+  tags:         string[]
+  status:       JobStatus
+  projectId?:   string
+  responsible?: string
+  publishedAt?: number
+  createdAt:    number
+  updatedAt?:   number
+}
+
+export interface JobApplication {
+  id:        string
+  jobId:     string
+  jobTitle:  string
+  firstName: string
+  lastName:  string
+  email:     string
+  phone?:    string
+  linkedIn?: string
+  message?:  string
+  createdAt: number
+}
