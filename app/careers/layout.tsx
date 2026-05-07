@@ -26,8 +26,8 @@ export default function CareersLayout({ children }: { children: React.ReactNode 
               jobs
             </span>
           </a>
-          <a href="mailto:kariera@splendit.cz" style={{ fontSize: '0.78rem', color: 'var(--primary, #00a87a)', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', fontWeight: 500 }}>
-            kariera@splendit.cz
+          <a href="mailto:info@splendit.cz" style={{ fontSize: '0.78rem', color: 'var(--primary, #00a87a)', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', fontWeight: 500 }}>
+            info@splendit.cz
           </a>
         </div>
       </header>

@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import {
   getJobs, createJob, updateJob, deleteJob, publishJob, unpublishJob,
   generateSlug, formatSalary, JOB_TYPE_LABELS, WORK_MODE_LABELS,
 } from '@/lib/jobs'
-import type { Job, JobStatus, JobType, WorkMode } from '@/lib/types'
+import type { Job, JobApplication, JobStatus, JobType, WorkMode } from '@/lib/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -195,13 +197,60 @@ function JobModal({ job, onClose, onSaved }: {
   )
 }
 
+// ── Application Toast ─────────────────────────────────────────────────────────
+
+function ApplicationToast({ app, onClose }: { app: JobApplication; onClose: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', bottom: 28, right: 28, zIndex: 2000,
+      background: 'white', borderRadius: 14, padding: '20px 24px',
+      boxShadow: '0 8px 40px rgba(0,0,0,0.18)', maxWidth: 360,
+      borderLeft: '4px solid #00a87a', animation: 'slideIn 0.3s ease',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: '#0f2e2a' }}>
+          New Application
+        </span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '1rem', lineHeight: 1 }}>✕</button>
+      </div>
+      <div style={{ fontSize: '0.82rem', color: '#333', fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.7 }}>
+        <div><strong>{app.firstName} {app.lastName}</strong></div>
+        <div style={{ color: '#00a87a' }}>{app.email}</div>
+        {app.phone    && <div>📞 {app.phone}</div>}
+        {app.linkedIn && <div>🔗 {app.linkedIn}</div>}
+        <div style={{ marginTop: 6, fontSize: '0.75rem', color: '#888' }}>Applied for: {app.jobTitle}</div>
+        {app.message  && <div style={{ marginTop: 6, fontSize: '0.75rem', color: '#555', borderTop: '1px solid #f0f0f0', paddingTop: 6 }}>{app.message}</div>}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function JobsPage() {
-  const [jobs,      setJobs]      = useState<Job[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [editing,   setEditing]   = useState<Job | undefined>()
+  const [jobs,        setJobs]        = useState<Job[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [showModal,   setShowModal]   = useState(false)
+  const [editing,     setEditing]     = useState<Job | undefined>()
+  const [newApp,      setNewApp]      = useState<JobApplication | null>(null)
+  const initializedRef = useRef(false)
+
+  // Real-time listener for new applications
+  useEffect(() => {
+    const q = query(collection(db, 'job_applications'), orderBy('createdAt', 'desc'))
+    const unsub = onSnapshot(q, snapshot => {
+      if (!initializedRef.current) {
+        initializedRef.current = true
+        return
+      }
+      const added = snapshot.docChanges().filter(c => c.type === 'added')
+      if (added.length > 0) {
+        const d = added[0].doc
+        setNewApp({ id: d.id, ...d.data() } as JobApplication)
+      }
+    })
+    return () => unsub()
+  }, [])
 
   async function load() {
     const data = await getJobs()
@@ -378,6 +427,17 @@ export default function JobsPage() {
           onSaved={() => { setShowModal(false); load() }}
         />
       )}
+
+      {newApp && (
+        <ApplicationToast app={newApp} onClose={() => setNewApp(null)} />
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(120%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }
