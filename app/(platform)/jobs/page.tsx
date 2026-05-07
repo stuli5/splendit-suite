@@ -14,6 +14,23 @@ import type { Job, JobApplication, JobStatus, JobType, WorkMode } from '@/lib/ty
 const JOB_TYPES:  JobType[]  = ['full-time', 'part-time', 'contract', 'freelance']
 const WORK_MODES: WorkMode[] = ['remote', 'hybrid', 'onsite']
 
+const TECH_SUGGESTIONS = [
+  // AI / ML
+  'Python', 'PyTorch', 'TensorFlow', 'LangChain', 'LlamaIndex', 'OpenAI API',
+  'Anthropic API', 'Hugging Face', 'LLM', 'RAG', 'MLflow', 'Scikit-learn',
+  'Pandas', 'NumPy', 'CUDA', 'Ollama', 'Vector DB', 'Vertex AI',
+  'AWS Bedrock', 'Transformers',
+  // DevOps / Cloud
+  'Docker', 'Kubernetes', 'Terraform', 'AWS', 'GCP', 'Azure',
+  'CI/CD', 'GitHub Actions', 'ArgoCD', 'Helm', 'Prometheus', 'Grafana',
+  'Linux', 'Bash', 'Ansible', 'GitLab CI', 'Datadog', 'Nginx',
+  // Backend / Data
+  'Node.js', 'FastAPI', 'Go', 'Rust', 'Java', 'TypeScript', 'JavaScript',
+  'PostgreSQL', 'MongoDB', 'Redis', 'Kafka', 'Elasticsearch', 'Spark',
+  // Frontend
+  'React', 'Next.js', 'GraphQL', 'REST API', 'gRPC',
+]
+
 const STATUS_STYLE: Record<JobStatus, { bg: string; color: string }> = {
   draft:     { bg: 'rgba(100,100,100,0.1)',  color: '#888'     },
   published: { bg: 'rgba(0,168,122,0.12)',   color: '#00a87a'  },
@@ -29,6 +46,123 @@ const inp: React.CSSProperties = {
 const lbl: React.CSSProperties = {
   fontSize: '0.68rem', color: 'var(--text-dim)', fontWeight: 600,
   letterSpacing: '0.05em', display: 'block', marginBottom: 5,
+}
+
+// ── Tag Input ─────────────────────────────────────────────────────────────────
+
+function TagInput({ value, onChange }: { value: string[]; onChange: (tags: string[]) => void }) {
+  const [input,    setInput]    = useState('')
+  const [open,     setOpen]     = useState(false)
+  const containerRef            = useRef<HTMLDivElement>(null)
+
+  const filtered = input.trim().length === 0
+    ? TECH_SUGGESTIONS.filter(s => !value.includes(s))
+    : TECH_SUGGESTIONS.filter(s =>
+        s.toLowerCase().includes(input.toLowerCase()) && !value.includes(s)
+      )
+
+  function addTag(tag: string) {
+    const t = tag.trim()
+    if (t && !value.includes(t)) onChange([...value, t])
+    setInput('')
+    setOpen(false)
+  }
+
+  function removeTag(tag: string) {
+    onChange(value.filter(t => t !== tag))
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if ((e.key === 'Enter' || e.key === ',') && input.trim()) {
+      e.preventDefault()
+      addTag(input.replace(/,$/, ''))
+    } else if (e.key === 'Backspace' && !input && value.length > 0) {
+      onChange(value.slice(0, -1))
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
+        padding: '7px 10px', borderRadius: 8,
+        border: `1px solid ${open ? 'rgba(0,168,122,0.55)' : 'rgba(0,168,122,0.25)'}`,
+        background: 'rgba(255,255,255,0.9)', cursor: 'text', minHeight: 40,
+        transition: 'border-color 0.15s',
+      }}
+        onClick={() => { setOpen(true); (containerRef.current?.querySelector('input') as HTMLInputElement | null)?.focus() }}
+      >
+        {value.map(tag => (
+          <span key={tag} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: '0.72rem', padding: '3px 8px', borderRadius: 20,
+            background: 'rgba(0,168,122,0.12)', color: '#00a87a',
+            fontFamily: 'JetBrains Mono, monospace', fontWeight: 600,
+            border: '1px solid rgba(0,168,122,0.2)',
+          }}>
+            {tag}
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); removeTag(tag) }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#00a87a', padding: 0, lineHeight: 1, fontSize: '0.75rem' }}
+            >×</button>
+          </span>
+        ))}
+        <input
+          value={input}
+          onChange={e => { setInput(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder={value.length === 0 ? 'Search or type a tag...' : ''}
+          style={{
+            border: 'none', outline: 'none', background: 'transparent',
+            fontSize: '0.82rem', fontFamily: 'JetBrains Mono, monospace',
+            color: 'var(--text)', minWidth: 120, flexGrow: 1,
+          }}
+        />
+      </div>
+
+      {open && filtered.length > 0 && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+          background: '#fff', border: '1px solid rgba(0,168,122,0.2)',
+          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+          zIndex: 100, maxHeight: 200, overflowY: 'auto',
+        }}>
+          {filtered.slice(0, 12).map(s => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={e => { e.preventDefault(); addTag(s) }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '8px 14px', background: 'none', border: 'none',
+                cursor: 'pointer', fontSize: '0.8rem',
+                fontFamily: 'JetBrains Mono, monospace', color: 'var(--text)',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.07)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none' }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Job Modal ─────────────────────────────────────────────────────────────────
@@ -47,14 +181,13 @@ function JobModal({ job, onClose, onSaved }: {
   const [currency,     setCurrency]     = useState<'CZK'|'EUR'>(job?.currency ?? 'CZK')
   const [description,  setDescription]  = useState(job?.description  ?? '')
   const [requirements, setRequirements] = useState(job?.requirements ?? '')
-  const [tagsRaw,      setTagsRaw]      = useState((job?.tags ?? []).join(', '))
+  const [tags,         setTags]         = useState<string[]>(job?.tags ?? [])
   const [responsible,  setResponsible]  = useState(job?.responsible  ?? '')
   const [saving,       setSaving]       = useState(false)
 
   async function handleSave() {
     if (!title.trim() || !description.trim() || !location.trim()) return
     setSaving(true)
-    const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean)
     const data: Omit<Job, 'id' | 'createdAt'> = {
       title:       title.trim(),
       slug:        job?.slug ?? generateSlug(title.trim()),
@@ -157,8 +290,11 @@ function JobModal({ job, onClose, onSaved }: {
           </div>
 
           <div>
-            <label style={lbl}>TAGS (comma separated)</label>
-            <input style={inp} value={tagsRaw} onChange={e => setTagsRaw(e.target.value)} placeholder="e.g. React, TypeScript, Node.js" />
+            <label style={lbl}>TAGS</label>
+            <TagInput value={tags} onChange={setTags} />
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: 4 }}>
+              Search from suggestions or type a custom tag and press Enter
+            </div>
           </div>
 
           <div>
