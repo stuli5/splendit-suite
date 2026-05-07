@@ -13,52 +13,57 @@ function JobCard({ job }: { job: Job }) {
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.85)',
-      borderRadius: 14,
-      padding: '24px 28px',
-      border: '1px solid rgba(0,168,122,0.12)',
-      boxShadow: '0 2px 14px rgba(0,0,0,0.05)',
+      background: '#fff',
+      borderRadius: 12,
+      padding: '22px 26px',
+      border: '1px solid #e8e8e8',
       cursor: 'pointer',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: '#0f2e2a', marginBottom: 6 }}>
-            {job.title}
-          </h2>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontSize: '0.78rem', color: '#555', fontFamily: 'JetBrains Mono, monospace' }}>
-              {job.location}
-            </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#ccc' }} />
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: modeColor, fontFamily: 'JetBrains Mono, monospace' }}>
-              {WORK_MODE_LABELS[job.workMode]}
-            </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#ccc' }} />
-            <span style={{ fontSize: '0.75rem', color: '#888', fontFamily: 'JetBrains Mono, monospace' }}>
-              {JOB_TYPE_LABELS[job.type]}
-            </span>
-          </div>
-          <p style={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            {job.description}
-          </p>
-        </div>
+      transition: 'box-shadow 0.15s, border-color 0.15s',
+    }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.borderColor = '#d0d0d0' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = '#e8e8e8' }}
+    >
+      {/* Title row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 10 }}>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: '#111', margin: 0, letterSpacing: '-0.01em' }}>
+          {job.title}
+        </h2>
         {salary && (
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#00a87a', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'nowrap' }}>
-              {salary}
-            </div>
-            <div style={{ fontSize: '0.65rem', color: '#aaa', marginTop: 2 }}>/ month</div>
-          </div>
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.85rem', color: '#111', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {salary} / mo
+          </span>
         )}
       </div>
+
+      {/* Work mode badge + location */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+        <span style={{
+          fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+          background: `${modeColor}18`, color: modeColor,
+          fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.03em',
+        }}>
+          {WORK_MODE_LABELS[job.workMode]}
+        </span>
+        <span style={{ fontSize: '0.78rem', color: '#666', fontFamily: 'JetBrains Mono, monospace' }}>
+          {job.location}
+        </span>
+      </div>
+
+      {/* Company + type */}
+      <div style={{ fontSize: '0.78rem', color: '#999', fontFamily: 'JetBrains Mono, monospace', marginBottom: 12 }}>
+        SplendIT · {JOB_TYPE_LABELS[job.type]}
+      </div>
+
+      {/* Description snippet */}
+      <p style={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.65, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        {job.description}
+      </p>
+
+      {/* Tags */}
       {job.tags.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 5, marginTop: 14, flexWrap: 'wrap' }}>
           {job.tags.map(tag => (
-            <span key={tag} style={{
-              fontSize: '0.68rem', padding: '3px 9px', borderRadius: 20,
-              background: 'rgba(0,168,122,0.07)', color: '#00a87a',
-              fontFamily: 'JetBrains Mono, monospace',
-            }}>
+            <span key={tag} style={{ fontSize: '0.68rem', padding: '3px 9px', borderRadius: 20, background: '#f4f4f4', color: '#555', fontFamily: 'JetBrains Mono, monospace' }}>
               {tag}
             </span>
           ))}
@@ -77,11 +82,11 @@ const TYPES:  Array<JobType  | 'all'> = ['all', 'full-time', 'part-time', 'contr
 function FilterBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick} style={{
-      padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
-      background: active ? '#00a87a' : 'rgba(255,255,255,0.7)',
+      padding: '5px 13px', borderRadius: 20, cursor: 'pointer',
+      background: active ? '#111' : '#fff',
       color: active ? '#fff' : '#555',
-      fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: active ? 600 : 400,
-      border: active ? 'none' : '1px solid rgba(0,168,122,0.15)',
+      fontSize: '0.73rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: active ? 600 : 400,
+      border: active ? '1px solid #111' : '1px solid #e0e0e0',
       transition: 'all 0.15s',
     }}>
       {children}
@@ -117,41 +122,41 @@ export default function CareersPage() {
   })
 
   return (
-    <main style={{ maxWidth: 900, margin: '0 auto', padding: '52px 24px' }}>
+    <main style={{ maxWidth: 760, margin: '0 auto', padding: '52px 24px' }}>
       {/* Hero */}
-      <div style={{ marginBottom: 44 }}>
-        <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '2.2rem', color: '#0f2e2a', marginBottom: 10, letterSpacing: '-0.02em' }}>
+      <div style={{ marginBottom: 36 }}>
+        <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 900, fontSize: '2rem', color: '#111', marginBottom: 8, letterSpacing: '-0.03em' }}>
           Open Positions
         </h1>
-        <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: 1.7, maxWidth: 560, fontFamily: 'JetBrains Mono, monospace' }}>
+        <p style={{ color: '#888', fontSize: '0.85rem', lineHeight: 1.7, fontFamily: 'JetBrains Mono, monospace' }}>
           We connect IT professionals with great companies. Join a project or a permanent role.
         </p>
       </div>
 
       {/* Search */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 16 }}>
         <input
           type="search"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search positions, skills, location..."
           style={{
-            width: '100%', padding: '12px 18px', borderRadius: 10,
-            border: '1px solid rgba(0,168,122,0.2)', background: 'rgba(255,255,255,0.9)',
+            width: '100%', padding: '11px 16px', borderRadius: 9,
+            border: '1px solid #e0e0e0', background: '#fff',
             fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace',
-            color: '#0f2e2a', outline: 'none', boxSizing: 'border-box',
+            color: '#111', outline: 'none', boxSizing: 'border-box',
           }}
         />
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 28, flexWrap: 'wrap' }}>
         {MODES.map(m => (
           <FilterBtn key={m} active={mode === m} onClick={() => setMode(m)}>
             {m === ALL ? 'All modes' : WORK_MODE_LABELS[m]}
           </FilterBtn>
         ))}
-        <div style={{ width: 1, background: 'rgba(0,168,122,0.15)', margin: '0 4px' }} />
+        <div style={{ width: 1, background: '#e8e8e8', margin: '0 4px' }} />
         {TYPES.map(t => (
           <FilterBtn key={t} active={type === t} onClick={() => setType(t)}>
             {t === ALL ? 'All types' : JOB_TYPE_LABELS[t]}
@@ -161,16 +166,16 @@ export default function CareersPage() {
 
       {/* Results */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#aaa', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
+        <div style={{ textAlign: 'center', padding: '80px 0', color: '#bbb', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
           Loading positions...
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#aaa', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
+        <div style={{ textAlign: 'center', padding: '80px 0', color: '#bbb', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
           {jobs.length === 0 ? 'No open positions at the moment. Check back soon!' : 'No positions match your filters.'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: '0.72rem', color: '#aaa', marginBottom: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontSize: '0.72rem', color: '#bbb', marginBottom: 4, fontFamily: 'JetBrains Mono, monospace' }}>
             {filtered.length} position{filtered.length !== 1 ? 's' : ''}
           </div>
           {filtered.map(job => (
