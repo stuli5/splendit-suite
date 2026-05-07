@@ -40,6 +40,24 @@ service cloud.firestore {
     match /deals/{id}              { allow read, write: if isAuth(); }
     match /aiUsage/{id}            { allow read: if isAuth(); allow write: if true; }
 
+    // ── Jobs — public read, authenticated write; applications open to public ──
+
+    match /jobs/{id} {
+      allow read:          if true;
+      allow write:         if isAuth();
+    }
+
+    // Applications — anyone can submit; only internal users can read
+    match /job_applications/{id} {
+      allow read:   if isAuth();
+      allow create: if hasFields(['jobId', 'jobTitle', 'firstName', 'lastName', 'email', 'createdAt'])
+        && incomingData().email     is string
+        && incomingData().firstName is string
+        && incomingData().lastName  is string
+        && incomingData().createdAt is number;
+      allow update, delete: if isAuth();
+    }
+
     // ── Activity & Notifications ──────────────────────────────────────────────
 
     // Activity log — append-only, authenticated users can read all
