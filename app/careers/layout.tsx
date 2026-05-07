@@ -7,26 +7,25 @@ export const metadata: Metadata = {
 
 export default function CareersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg0)' }}>
+    <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
       <header style={{
-        background: 'rgba(255,255,255,0.88)',
-        borderBottom: '1px solid rgba(0,168,122,0.12)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
+        background: '#fff',
+        borderBottom: '1px solid #ebebeb',
         position: 'sticky',
         top: 0,
         zIndex: 50,
       }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 62 }}>
-          <a href="https://splendit.cz" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.25rem', color: '#00a87a', letterSpacing: '-0.02em' }}>
-              Splendit<span style={{ color: '#0091c7' }}>IT</span>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66 }}>
+          <a href="https://splendit.cz" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 0 }}>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 900, fontSize: '1.45rem', color: '#111', letterSpacing: '-0.03em' }}>
+              Splend<span style={{ color: '#00a87a' }}>IT</span>
             </span>
-            <span style={{ fontSize: '0.7rem', color: '#aaa', borderLeft: '1px solid rgba(0,168,122,0.2)', paddingLeft: 10, fontFamily: 'JetBrains Mono, monospace' }}>
+            <span style={{ margin: '0 10px', color: '#ccc', fontWeight: 300, fontSize: '1.2rem' }}>/</span>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1rem', color: '#111', letterSpacing: '-0.01em' }}>
               jobs
             </span>
           </a>
-          <a href="mailto:info@splendit.cz" style={{ fontSize: '0.78rem', color: 'var(--primary, #00a87a)', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', fontWeight: 500 }}>
+          <a href="mailto:info@splendit.cz" style={{ fontSize: '0.78rem', color: '#555', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', fontWeight: 500 }}>
             info@splendit.cz
           </a>
         </div>

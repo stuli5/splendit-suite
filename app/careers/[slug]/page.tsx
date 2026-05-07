@@ -154,83 +154,93 @@ export default function JobDetailPage() {
   const salary    = formatSalary(job)
   const modeColor = WORK_MODE_COLORS[job.workMode] ?? '#888'
 
+  const infoRows = [
+    { icon: '📍', label: 'Location',  value: job.location },
+    { icon: '💻', label: 'Work mode', value: WORK_MODE_LABELS[job.workMode] },
+    { icon: '📄', label: 'Job type',  value: JOB_TYPE_LABELS[job.type] },
+    ...(salary ? [{ icon: '💰', label: 'Salary', value: `${salary} / month` }] : []),
+  ]
+
   return (
-    <main style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px' }}>
+    <main style={{ maxWidth: 960, margin: '0 auto', padding: '44px 28px' }}>
       {/* Back */}
-      <a href="/careers" style={{ fontSize: '0.78rem', color: '#00a87a', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 28 }}>
+      <a href="/careers" style={{ fontSize: '0.78rem', color: '#888', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 32 }}>
         ← All positions
       </a>
 
-      {/* Header */}
-      <div style={{ marginBottom: 36 }}>
-        <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '2rem', color: '#0f2e2a', marginBottom: 14, letterSpacing: '-0.02em' }}>
-          {job.title}
-        </h1>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.82rem', color: '#555', fontFamily: 'JetBrains Mono, monospace' }}>
-            {job.location}
-          </span>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: modeColor, fontFamily: 'JetBrains Mono, monospace', background: `${modeColor}14`, padding: '3px 10px', borderRadius: 20 }}>
-            {WORK_MODE_LABELS[job.workMode]}
-          </span>
-          <span style={{ fontSize: '0.8rem', color: '#888', fontFamily: 'JetBrains Mono, monospace', background: 'rgba(0,0,0,0.05)', padding: '3px 10px', borderRadius: 20 }}>
-            {JOB_TYPE_LABELS[job.type]}
-          </span>
-          {salary && (
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#00a87a', fontFamily: 'JetBrains Mono, monospace' }}>
-              {salary} / month
-            </span>
-          )}
-        </div>
-        {job.tags.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-            {job.tags.map(tag => (
-              <span key={tag} style={{ fontSize: '0.7rem', padding: '3px 9px', borderRadius: 20, background: 'rgba(0,168,122,0.07)', color: '#00a87a', fontFamily: 'JetBrains Mono, monospace' }}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32, alignItems: 'start' }}>
-        {/* Description */}
+        {/* ── Left: title + content ── */}
         <div>
-          <div style={{ background: 'rgba(255,255,255,0.85)', borderRadius: 14, padding: '28px 30px', border: '1px solid rgba(0,168,122,0.1)', marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: '#0f2e2a', marginBottom: 16, letterSpacing: '0.02em' }}>
+          <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 900, fontSize: '2.1rem', color: '#111', marginBottom: 16, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+            {job.title}
+          </h1>
+
+          {job.tags.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 32, flexWrap: 'wrap' }}>
+              {job.tags.map(tag => (
+                <span key={tag} style={{ fontSize: '0.72rem', padding: '4px 11px', borderRadius: 20, background: '#f0faf8', color: '#00a87a', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, border: '1px solid rgba(0,168,122,0.15)' }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
               ABOUT THE ROLE
             </h2>
-            <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.8, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace' }}>
+            <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace' }}>
               {job.description}
             </p>
           </div>
 
           {job.requirements && (
-            <div style={{ background: 'rgba(255,255,255,0.85)', borderRadius: 14, padding: '28px 30px', border: '1px solid rgba(0,168,122,0.1)' }}>
-              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: '#0f2e2a', marginBottom: 16, letterSpacing: '0.02em' }}>
+            <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee' }}>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
                 REQUIREMENTS
               </h2>
-              <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.8, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace' }}>
+              <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace' }}>
                 {job.requirements}
               </p>
             </div>
           )}
         </div>
 
-        {/* Apply panel */}
+        {/* ── Right: info + apply ── */}
         <div style={{ position: 'sticky', top: 82 }}>
-          <div style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: '28px 28px', border: '1px solid rgba(0,168,122,0.15)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+
+          {/* Info card */}
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #eee', overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ background: '#f8f8f8', padding: '14px 20px', borderBottom: '1px solid #eee' }}>
+              <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: '#111', letterSpacing: '0.06em' }}>
+                JOB DETAILS
+              </span>
+            </div>
+            {infoRows.map(row => (
+              <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '1rem', width: 22, textAlign: 'center', flexShrink: 0 }}>{row.icon}</span>
+                <div>
+                  <div style={{ fontSize: '0.65rem', color: '#aaa', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, letterSpacing: '0.05em', marginBottom: 1 }}>{row.label.toUpperCase()}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#111', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>{row.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Apply panel */}
+          <div style={{ background: '#fff', borderRadius: 14, padding: '24px', border: '1px solid #eee' }}>
             {submitted ? (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: '2rem', marginBottom: 14 }}>✓</div>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, color: '#00a87a', marginBottom: 8 }}>Application Sent!</h3>
-                <p style={{ fontSize: '0.82rem', color: '#666', lineHeight: 1.6, fontFamily: 'JetBrains Mono, monospace' }}>
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: '2rem', marginBottom: 12 }}>✓</div>
+                <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: '#00a87a', marginBottom: 8, fontSize: '1rem' }}>Application Sent!</h3>
+                <p style={{ fontSize: '0.8rem', color: '#666', lineHeight: 1.6, fontFamily: 'JetBrains Mono, monospace' }}>
                   Thank you for applying. We will get back to you shortly.
                 </p>
               </div>
             ) : (
               <>
-                <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1rem', color: '#0f2e2a', marginBottom: 20 }}>
+                <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.95rem', color: '#111', marginBottom: 18 }}>
                   Apply for this position
                 </h2>
                 <ApplyForm job={job} onSubmitted={() => setSubmitted(true)} />
