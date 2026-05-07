@@ -77,7 +77,7 @@ const TYPES:  Array<JobType  | 'all'> = ['all', 'full-time', 'part-time', 'contr
 function FilterBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick} style={{
-      padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
+      padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
       background: active ? '#00a87a' : 'rgba(255,255,255,0.7)',
       color: active ? '#fff' : '#555',
       fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', fontWeight: active ? 600 : 400,
