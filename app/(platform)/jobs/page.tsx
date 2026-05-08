@@ -29,6 +29,14 @@ const TECH_SUGGESTIONS = [
   'PostgreSQL', 'MongoDB', 'Redis', 'Kafka', 'Elasticsearch', 'Spark',
   // Frontend
   'React', 'Next.js', 'GraphQL', 'REST API', 'gRPC',
+  // Security
+  'OWASP', 'SAST', 'DAST', 'Penetration Testing', 'Vulnerability Assessment',
+  'SIEM', 'SOC', 'Zero Trust', 'IAM', 'OAuth2', 'SAML', 'PKI',
+  'Burp Suite', 'Metasploit', 'Nmap', 'Wireshark', 'Splunk',
+  'ISO 27001', 'SOC 2', 'GDPR', 'PCI DSS', 'NIST', 'CIS Benchmarks',
+  // ITSM / ITIL
+  'ITIL', 'ITSM', 'ServiceNow', 'CMDB', 'Change Management',
+  'Incident Management', 'Problem Management', 'SLA', 'COBIT',
 ]
 
 const STATUS_STYLE: Record<JobStatus, { bg: string; color: string }> = {
