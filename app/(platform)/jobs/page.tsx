@@ -186,7 +186,7 @@ const FORMAT_ACTIONS: FormatAction[] = [
 ]
 
 function MarkdownToolbar({ textareaRef, value, onChange }: {
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
   value: string
   onChange: (v: string) => void
 }) {
