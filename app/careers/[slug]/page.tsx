@@ -1,9 +1,85 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getJobBySlug, submitApplication, formatSalary, JOB_TYPE_LABELS, WORK_MODE_LABELS } from '@/lib/jobs'
 import type { Job } from '@/lib/types'
+
+// ── Markdown Renderer ─────────────────────────────────────────────────────────
+
+function parseInline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  // Match **bold** or *italic*
+  const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
+  let last = 0
+  let m: RegExpExecArray | null
+  let idx = 0
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index))
+    if (m[0].startsWith('**')) {
+      parts.push(<strong key={idx++}>{m[2]}</strong>)
+    } else {
+      parts.push(<em key={idx++}>{m[3]}</em>)
+    }
+    last = m.index + m[0].length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts
+}
+
+function MarkdownText({ text }: { text: string }) {
+  const lines = text.split('\n')
+  const nodes: React.ReactNode[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    if (/^## (.+)/.test(line)) {
+      nodes.push(
+        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginTop: 20, marginBottom: 6, letterSpacing: '0.06em' }}>
+          {line.replace(/^## /, '')}
+        </div>
+      )
+    } else if (/^### (.+)/.test(line)) {
+      nodes.push(
+        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.78rem', color: '#333', marginTop: 14, marginBottom: 4 }}>
+          {line.replace(/^### /, '')}
+        </div>
+      )
+    } else if (/^- (.+)/.test(line)) {
+      nodes.push(
+        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+          <span style={{ color: '#00a87a', flexShrink: 0 }}>•</span>
+          <span>{parseInline(line.replace(/^- /, ''))}</span>
+        </div>
+      )
+    } else if (/^\d+\. (.+)/.test(line)) {
+      const num = line.match(/^(\d+)\./)?.[1]
+      nodes.push(
+        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+          <span style={{ color: '#00a87a', flexShrink: 0, minWidth: 18 }}>{num}.</span>
+          <span>{parseInline(line.replace(/^\d+\. /, ''))}</span>
+        </div>
+      )
+    } else if (line.trim() === '') {
+      nodes.push(<div key={i} style={{ height: 8 }} />)
+    } else {
+      nodes.push(
+        <div key={i} style={{ marginBottom: 2 }}>
+          {parseInline(line)}
+        </div>
+      )
+    }
+    i++
+  }
+
+  return (
+    <div style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, fontFamily: 'JetBrains Mono, monospace' }}>
+      {nodes}
+    </div>
+  )
+}
 
 // ── Application Form ──────────────────────────────────────────────────────────
 
@@ -127,6 +203,7 @@ export default function JobDetailPage() {
   const [job,       setJob]       = useState<Job | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [submitted, setSubmitted] = useState(false)
+  const applyRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!slug) return
@@ -143,7 +220,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '80px 24px', textAlign: 'center', color: '#aaa', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}>
+      <main style={{ maxWidth: 1140, margin: '0 auto', padding: '80px 24px', textAlign: 'center', color: '#aaa', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}>
         Loading...
       </main>
     )
@@ -154,14 +231,13 @@ export default function JobDetailPage() {
   const salary = formatSalary(job)
 
   return (
-    <main style={{ maxWidth: '100%', margin: 0, padding: 0 }}>
+    <main style={{ maxWidth: '100%', margin: 0, padding: 0, background: '#f5f5f5', minHeight: '100vh' }}>
 
       {/* ── Hero Banner ── */}
       <div style={{
         background: 'linear-gradient(135deg, #00a87a 0%, #0091c7 100%)',
-        padding: '0 0 0 0',
       }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '28px 28px 0' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto', padding: '28px 28px 0' }}>
           <a href="/careers" style={{
             fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', textDecoration: 'none',
             fontFamily: 'JetBrains Mono, monospace', display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -170,7 +246,7 @@ export default function JobDetailPage() {
           </a>
         </div>
 
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 28px 36px' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto', padding: '24px 28px 36px' }}>
           {/* Company badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -195,7 +271,7 @@ export default function JobDetailPage() {
           </h1>
 
           {/* Info row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px', marginBottom: job.tags.length > 0 ? 22 : 0 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px', marginBottom: job.tags.length > 0 ? 22 : 28 }}>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 5 }}>
               <span>📍</span> {job.location}
             </span>
@@ -211,7 +287,7 @@ export default function JobDetailPage() {
 
           {/* Tags */}
           {job.tags.length > 0 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 28 }}>
               {job.tags.map(tag => (
                 <span key={tag} style={{
                   fontSize: '0.7rem', padding: '4px 12px', borderRadius: 20,
@@ -224,66 +300,68 @@ export default function JobDetailPage() {
               ))}
             </div>
           )}
+
+          {/* Apply CTA */}
+          <button
+            onClick={() => applyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            style={{
+              padding: '13px 32px', borderRadius: 10, border: '2px solid rgba(255,255,255,0.9)',
+              background: '#fff', color: '#00a87a',
+              fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.95rem',
+              cursor: 'pointer', letterSpacing: '-0.01em',
+            }}
+          >
+            Apply for this position →
+          </button>
         </div>
       </div>
 
       {/* ── Body ── */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '36px 28px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 32, alignItems: 'start' }}>
+      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '36px 28px 60px' }}>
 
-          {/* ── Left: description + requirements ── */}
-          <div>
-            <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
-                ABOUT THE ROLE
-              </h2>
-              <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace', margin: 0 }}>
-                {job.description}
+        <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', marginBottom: 16 }}>
+          <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
+            ABOUT THE ROLE
+          </h2>
+          <MarkdownText text={job.description} />
+        </div>
+
+        {job.requirements && (
+          <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', marginBottom: 16 }}>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
+              REQUIREMENTS
+            </h2>
+            <MarkdownText text={job.requirements} />
+          </div>
+        )}
+
+        {/* ── Apply Form ── */}
+        <div ref={applyRef} style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', scrollMarginTop: 80 }}>
+          {submitted ? (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #00a87a, #0091c7)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 14px', fontSize: '1.4rem', color: '#fff',
+              }}>✓</div>
+              <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: '#00a87a', marginBottom: 8, fontSize: '1rem' }}>
+                Application Sent!
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: '#666', lineHeight: 1.6, fontFamily: 'JetBrains Mono, monospace' }}>
+                Thank you for applying. We will get back to you shortly.
               </p>
             </div>
-
-            {job.requirements && (
-              <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee' }}>
-                <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>
-                  REQUIREMENTS
-                </h2>
-                <p style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono, monospace', margin: 0 }}>
-                  {job.requirements}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* ── Right: Apply ── */}
-          <div style={{ position: 'sticky', top: 82 }}>
-            <div style={{ background: '#fff', borderRadius: 14, padding: '24px', border: '1px solid #eee' }}>
-              {submitted ? (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #00a87a, #0091c7)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 14px', fontSize: '1.4rem', color: '#fff',
-                  }}>✓</div>
-                  <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: '#00a87a', marginBottom: 8, fontSize: '1rem' }}>
-                    Application Sent!
-                  </h3>
-                  <p style={{ fontSize: '0.8rem', color: '#666', lineHeight: 1.6, fontFamily: 'JetBrains Mono, monospace' }}>
-                    Thank you for applying. We will get back to you shortly.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.92rem', color: '#111', marginBottom: 18 }}>
-                    Apply for this position
-                  </h2>
-                  <ApplyForm job={job} onSubmitted={() => setSubmitted(true)} />
-                </>
-              )}
-            </div>
-          </div>
-
+          ) : (
+            <>
+              <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.92rem', color: '#111', marginBottom: 18 }}>
+                Apply for this position
+              </h2>
+              <ApplyForm job={job} onSubmitted={() => setSubmitted(true)} />
+            </>
+          )}
         </div>
+
       </div>
     </main>
   )

@@ -174,53 +174,112 @@ function TagInput({ value, onChange }: { value: string[]; onChange: (tags: strin
   )
 }
 
-// ── Markdown Toolbar ──────────────────────────────────────────────────────────
+// ── Rich Text Editor ──────────────────────────────────────────────────────────
 
-type FormatAction = { label: string; title: string; wrap?: [string, string]; prefix?: string }
+function inlineToHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+}
 
-const FORMAT_ACTIONS: FormatAction[] = [
-  { label: 'B',  title: 'Bold',          wrap: ['**', '**'] },
-  { label: 'I',  title: 'Italic',        wrap: ['*', '*'] },
-  { label: 'H2', title: 'Heading',       prefix: '## ' },
-  { label: '•',  title: 'Bullet list',   prefix: '- ' },
-  { label: '1.', title: 'Numbered list', prefix: '1. ' },
-]
+function markdownToHtml(md: string): string {
+  if (!md) return ''
+  const lines = md.split('\n')
+  const out: string[] = []
+  let inUl = false
+  let inOl = false
+  const closeList = () => {
+    if (inUl) { out.push('</ul>'); inUl = false }
+    if (inOl) { out.push('</ol>'); inOl = false }
+  }
+  for (const line of lines) {
+    if (/^## (.+)/.test(line)) {
+      closeList()
+      out.push(`<h2>${inlineToHtml(line.replace(/^## /, ''))}</h2>`)
+    } else if (/^### (.+)/.test(line)) {
+      closeList()
+      out.push(`<h3>${inlineToHtml(line.replace(/^### /, ''))}</h3>`)
+    } else if (/^- (.+)/.test(line)) {
+      if (inOl) { out.push('</ol>'); inOl = false }
+      if (!inUl) { out.push('<ul>'); inUl = true }
+      out.push(`<li>${inlineToHtml(line.replace(/^- /, ''))}</li>`)
+    } else if (/^\d+\. (.+)/.test(line)) {
+      if (inUl) { out.push('</ul>'); inUl = false }
+      if (!inOl) { out.push('<ol>'); inOl = true }
+      out.push(`<li>${inlineToHtml(line.replace(/^\d+\. /, ''))}</li>`)
+    } else if (line.trim() === '') {
+      closeList()
+      out.push('<div><br></div>')
+    } else {
+      closeList()
+      out.push(`<div>${inlineToHtml(line)}</div>`)
+    }
+  }
+  closeList()
+  return out.join('')
+}
 
-function MarkdownToolbar({ textareaRef, value, onChange }: {
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>
+function nodeToMd(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? ''
+  if (node.nodeType !== Node.ELEMENT_NODE) return ''
+  const el = node as Element
+  const tag = el.tagName.toLowerCase()
+  const kids = () => Array.from(el.childNodes).map(nodeToMd).join('')
+  switch (tag) {
+    case 'strong': case 'b': return `**${kids()}**`
+    case 'em':     case 'i': return `*${kids()}*`
+    case 'h2': return `## ${kids()}\n`
+    case 'h3': return `### ${kids()}\n`
+    case 'br': return el.parentElement?.childNodes.length === 1 ? '' : '\n'
+    case 'ul': case 'ol': return kids()
+    case 'li': {
+      const parent = el.parentElement?.tagName.toLowerCase()
+      if (parent === 'ol') {
+        const idx = Array.from(el.parentElement?.children ?? []).indexOf(el) + 1
+        return `${idx}. ${kids()}\n`
+      }
+      return `- ${kids()}\n`
+    }
+    case 'div': case 'p': {
+      const c = kids()
+      if (!c || c === '\n') return '\n'
+      return c.endsWith('\n') ? c : `${c}\n`
+    }
+    default: return kids()
+  }
+}
+
+function htmlToMarkdown(html: string): string {
+  if (typeof window === 'undefined') return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return nodeToMd(doc.body).replace(/\n{3,}/g, '\n\n').trim()
+}
+
+function RichTextEditor({ value, onChange, minHeight, placeholder }: {
   value: string
   onChange: (v: string) => void
+  minHeight: number
+  placeholder?: string
 }) {
-  function applyFormat(action: FormatAction) {
-    const el = textareaRef.current
-    if (!el) return
-    const start = el.selectionStart
-    const end   = el.selectionEnd
-    const selected = value.slice(start, end)
+  const editorRef = useRef<HTMLDivElement>(null)
+  const [empty, setEmpty] = useState(!value.trim())
 
-    let newValue: string
-    let newStart: number
-    let newEnd: number
+  useEffect(() => {
+    if (editorRef.current) editorRef.current.innerHTML = markdownToHtml(value)
+  }, []) // uncontrolled after mount
 
-    if (action.wrap) {
-      const [open, close] = action.wrap
-      newValue = value.slice(0, start) + open + selected + close + value.slice(end)
-      newStart = start + open.length
-      newEnd   = end   + open.length
-    } else if (action.prefix) {
-      const lineStart = value.lastIndexOf('\n', start - 1) + 1
-      newValue = value.slice(0, lineStart) + action.prefix + value.slice(lineStart)
-      newStart = start + action.prefix.length
-      newEnd   = end   + action.prefix.length
-    } else {
-      return
-    }
+  function execCmd(cmd: string, arg?: string) {
+    editorRef.current?.focus()
+    document.execCommand(cmd, false, arg)
+    sync()
+  }
 
-    onChange(newValue)
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(newStart, newEnd)
-    })
+  function sync() {
+    if (!editorRef.current) return
+    const md = htmlToMarkdown(editorRef.current.innerHTML)
+    setEmpty(!md.trim())
+    onChange(md)
   }
 
   const btnStyle: React.CSSProperties = {
@@ -231,21 +290,42 @@ function MarkdownToolbar({ textareaRef, value, onChange }: {
     transition: 'background 0.12s',
   }
 
+  const TOOLS = [
+    { label: 'B',  title: 'Bold',          extra: { fontWeight: 900 as const }, action: () => execCmd('bold') },
+    { label: 'I',  title: 'Italic',         extra: { fontStyle: 'italic' as const }, action: () => execCmd('italic') },
+    { label: 'H2', title: 'Heading',        extra: {}, action: () => execCmd('formatBlock', 'h2') },
+    { label: '•',  title: 'Bullet list',    extra: {}, action: () => execCmd('insertUnorderedList') },
+    { label: '1.', title: 'Numbered list',  extra: {}, action: () => execCmd('insertOrderedList') },
+  ]
+
   return (
-    <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
-      {FORMAT_ACTIONS.map(a => (
-        <button
-          key={a.label}
-          type="button"
-          title={a.title}
-          onMouseDown={e => { e.preventDefault(); applyFormat(a) }}
-          style={btnStyle}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.15)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.06)' }}
-        >
-          {a.label}
-        </button>
-      ))}
+    <div>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
+        {TOOLS.map(t => (
+          <button key={t.label} type="button" title={t.title}
+            onMouseDown={e => { e.preventDefault(); t.action() }}
+            style={{ ...btnStyle, ...t.extra }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.15)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.06)' }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ position: 'relative' }}>
+        {empty && placeholder && (
+          <div style={{ position: 'absolute', top: 9, left: 12, fontSize: '0.82rem', fontFamily: 'JetBrains Mono, monospace', color: '#aaa', pointerEvents: 'none', zIndex: 1 }}>
+            {placeholder}
+          </div>
+        )}
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={sync}
+          style={{ ...inp, minHeight, outline: 'none', lineHeight: 1.65, cursor: 'text' }}
+        />
+      </div>
     </div>
   )
 }
@@ -270,9 +350,6 @@ function JobModal({ job, onClose, onSaved }: {
   const [responsible,  setResponsible]  = useState(job?.responsible  ?? '')
   const [saving,       setSaving]       = useState(false)
   const [fullscreen,   setFullscreen]   = useState(false)
-
-  const descRef = useRef<HTMLTextAreaElement>(null)
-  const reqRef  = useRef<HTMLTextAreaElement>(null)
 
   async function handleSave() {
     if (!title.trim() || !description.trim() || !location.trim()) return
@@ -373,24 +450,20 @@ function JobModal({ job, onClose, onSaved }: {
 
           <div>
             <label style={lbl}>JOB DESCRIPTION *</label>
-            <MarkdownToolbar textareaRef={descRef} value={description} onChange={setDescription} />
-            <textarea
-              ref={descRef}
-              style={{ ...inp, resize: 'vertical', minHeight: fullscreen ? 260 : 180 }}
+            <RichTextEditor
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={setDescription}
+              minHeight={fullscreen ? 260 : 180}
               placeholder="Describe the role, team, responsibilities..."
             />
           </div>
 
           <div>
             <label style={lbl}>REQUIREMENTS</label>
-            <MarkdownToolbar textareaRef={reqRef} value={requirements} onChange={setRequirements} />
-            <textarea
-              ref={reqRef}
-              style={{ ...inp, resize: 'vertical', minHeight: fullscreen ? 180 : 110 }}
+            <RichTextEditor
               value={requirements}
-              onChange={e => setRequirements(e.target.value)}
+              onChange={setRequirements}
+              minHeight={fullscreen ? 180 : 110}
               placeholder="Key skills and experience required..."
             />
           </div>

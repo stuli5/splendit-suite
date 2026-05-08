@@ -137,18 +137,17 @@ export default function CareersPage() {
   })
 
   return (
-    <main style={{ margin: 0, padding: 0 }}>
+    <main style={{ margin: 0, padding: 0, background: 'linear-gradient(135deg, #0a1628 0%, #0f2e2a 60%, #0a1e2e 100%)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient glow blobs */}
+      <div style={{ position: 'fixed', top: -120, right: '8%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,168,122,0.12) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', bottom: -100, left: '3%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,145,199,0.10) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       {/* ── Hero ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #0a1628 0%, #0f2e2a 60%, #0a1e2e 100%)',
         padding: '72px 28px 80px',
         position: 'relative',
-        overflow: 'hidden',
+        zIndex: 1,
       }}>
-        {/* Glow blobs */}
-        <div style={{ position: 'absolute', top: -60, right: '10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,168,122,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -80, left: '5%',  width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,145,199,0.14) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 760, margin: '0 auto', position: 'relative' }}>
           <div style={{ marginBottom: 16 }}>
@@ -214,7 +213,7 @@ export default function CareersPage() {
       </div>
 
       {/* ── Listings ── */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 28px 60px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 28px 60px', position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#bbb', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
             Loading positions...
