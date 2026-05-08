@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function CareersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
+    <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       <header style={{
         background: '#fff',
         borderBottom: '1px solid #ebebeb',
