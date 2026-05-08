@@ -223,7 +223,7 @@ function JobModal({ job, onClose, onSaved }: {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'var(--bg0)', borderRadius: 16, padding: 32, width: 580, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+      <div style={{ background: 'var(--bg0)', borderRadius: 16, padding: 40, width: 820, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)' }}>
             {job ? 'Edit Job' : 'New Job'}
@@ -280,7 +280,7 @@ function JobModal({ job, onClose, onSaved }: {
           <div>
             <label style={lbl}>JOB DESCRIPTION *</label>
             <textarea
-              style={{ ...inp, resize: 'vertical', minHeight: 130 }}
+              style={{ ...inp, resize: 'vertical', minHeight: 180 }}
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Describe the role, team, responsibilities..."
@@ -290,7 +290,7 @@ function JobModal({ job, onClose, onSaved }: {
           <div>
             <label style={lbl}>REQUIREMENTS</label>
             <textarea
-              style={{ ...inp, resize: 'vertical', minHeight: 80 }}
+              style={{ ...inp, resize: 'vertical', minHeight: 110 }}
               value={requirements}
               onChange={e => setRequirements(e.target.value)}
               placeholder="Key skills and experience required..."
