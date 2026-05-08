@@ -173,6 +173,82 @@ function TagInput({ value, onChange }: { value: string[]; onChange: (tags: strin
   )
 }
 
+// ── Markdown Toolbar ──────────────────────────────────────────────────────────
+
+type FormatAction = { label: string; title: string; wrap?: [string, string]; prefix?: string }
+
+const FORMAT_ACTIONS: FormatAction[] = [
+  { label: 'B',  title: 'Bold',          wrap: ['**', '**'] },
+  { label: 'I',  title: 'Italic',        wrap: ['*', '*'] },
+  { label: 'H2', title: 'Heading',       prefix: '## ' },
+  { label: '•',  title: 'Bullet list',   prefix: '- ' },
+  { label: '1.', title: 'Numbered list', prefix: '1. ' },
+]
+
+function MarkdownToolbar({ textareaRef, value, onChange }: {
+  textareaRef: React.RefObject<HTMLTextAreaElement>
+  value: string
+  onChange: (v: string) => void
+}) {
+  function applyFormat(action: FormatAction) {
+    const el = textareaRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const end   = el.selectionEnd
+    const selected = value.slice(start, end)
+
+    let newValue: string
+    let newStart: number
+    let newEnd: number
+
+    if (action.wrap) {
+      const [open, close] = action.wrap
+      newValue = value.slice(0, start) + open + selected + close + value.slice(end)
+      newStart = start + open.length
+      newEnd   = end   + open.length
+    } else if (action.prefix) {
+      const lineStart = value.lastIndexOf('\n', start - 1) + 1
+      newValue = value.slice(0, lineStart) + action.prefix + value.slice(lineStart)
+      newStart = start + action.prefix.length
+      newEnd   = end   + action.prefix.length
+    } else {
+      return
+    }
+
+    onChange(newValue)
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(newStart, newEnd)
+    })
+  }
+
+  const btnStyle: React.CSSProperties = {
+    padding: '3px 8px', borderRadius: 5, border: '1px solid rgba(0,168,122,0.2)',
+    background: 'rgba(0,168,122,0.06)', cursor: 'pointer',
+    fontSize: '0.72rem', fontFamily: 'JetBrains Mono, monospace',
+    fontWeight: 700, color: 'var(--text)', lineHeight: 1.4,
+    transition: 'background 0.12s',
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
+      {FORMAT_ACTIONS.map(a => (
+        <button
+          key={a.label}
+          type="button"
+          title={a.title}
+          onMouseDown={e => { e.preventDefault(); applyFormat(a) }}
+          style={btnStyle}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.15)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,168,122,0.06)' }}
+        >
+          {a.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── Job Modal ─────────────────────────────────────────────────────────────────
 
 function JobModal({ job, onClose, onSaved }: {
@@ -192,6 +268,10 @@ function JobModal({ job, onClose, onSaved }: {
   const [tags,         setTags]         = useState<string[]>(job?.tags ?? [])
   const [responsible,  setResponsible]  = useState(job?.responsible  ?? '')
   const [saving,       setSaving]       = useState(false)
+  const [fullscreen,   setFullscreen]   = useState(false)
+
+  const descRef = useRef<HTMLTextAreaElement>(null)
+  const reqRef  = useRef<HTMLTextAreaElement>(null)
 
   async function handleSave() {
     if (!title.trim() || !description.trim() || !location.trim()) return
@@ -221,17 +301,30 @@ function JobModal({ job, onClose, onSaved }: {
     onSaved()
   }
 
+  const modalStyle: React.CSSProperties = fullscreen
+    ? { background: 'var(--bg0)', borderRadius: 0, padding: 40, width: '100vw', height: '100vh', overflowY: 'auto', boxShadow: 'none', display: 'flex', flexDirection: 'column' }
+    : { background: 'var(--bg0)', borderRadius: 16, padding: 40, width: 820, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }
+
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: 'var(--bg0)', borderRadius: 16, padding: 40, width: 820, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: fullscreen ? 'transparent' : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: fullscreen ? 'stretch' : 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={modalStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)' }}>
             {job ? 'Edit Job' : 'New Job'}
           </span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-dim)' }}>✕</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={() => setFullscreen(f => !f)}
+              title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              style={{ background: 'none', border: '1px solid rgba(0,168,122,0.25)', borderRadius: 7, cursor: 'pointer', padding: '4px 8px', color: 'var(--text-dim)', fontSize: '0.85rem', lineHeight: 1 }}
+            >
+              {fullscreen ? '⊡' : '⛶'}
+            </button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--text-dim)' }}>✕</button>
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gap: 16 }}>
+        <div style={{ display: 'grid', gap: 16, flex: fullscreen ? 1 : undefined }}>
           <div>
             <label style={lbl}>POSITION TITLE *</label>
             <input style={inp} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior React Developer" />
@@ -279,8 +372,10 @@ function JobModal({ job, onClose, onSaved }: {
 
           <div>
             <label style={lbl}>JOB DESCRIPTION *</label>
+            <MarkdownToolbar textareaRef={descRef} value={description} onChange={setDescription} />
             <textarea
-              style={{ ...inp, resize: 'vertical', minHeight: 180 }}
+              ref={descRef}
+              style={{ ...inp, resize: 'vertical', minHeight: fullscreen ? 260 : 180 }}
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Describe the role, team, responsibilities..."
@@ -289,8 +384,10 @@ function JobModal({ job, onClose, onSaved }: {
 
           <div>
             <label style={lbl}>REQUIREMENTS</label>
+            <MarkdownToolbar textareaRef={reqRef} value={requirements} onChange={setRequirements} />
             <textarea
-              style={{ ...inp, resize: 'vertical', minHeight: 110 }}
+              ref={reqRef}
+              style={{ ...inp, resize: 'vertical', minHeight: fullscreen ? 180 : 110 }}
               value={requirements}
               onChange={e => setRequirements(e.target.value)}
               placeholder="Key skills and experience required..."
