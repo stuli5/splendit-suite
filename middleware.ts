@@ -19,8 +19,8 @@ export function middleware(req: NextRequest) {
   const isJobsDomain = host === 'jobs.splendit.cz' || host.startsWith('jobs.')
 
   if (isJobsDomain && !pathname.startsWith('/careers')) {
-    const url    = req.nextUrl.clone()
-    url.pathname = pathname === '/' ? '/careers' : `/careers${pathname}`
+    const newPath = pathname === '/' ? '/careers' : `/careers${pathname}`
+    const url     = new URL(newPath, req.url)
     return NextResponse.rewrite(url)
   }
 
