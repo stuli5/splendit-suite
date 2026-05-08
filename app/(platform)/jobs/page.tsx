@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import {
@@ -305,8 +306,8 @@ function JobModal({ job, onClose, onSaved }: {
     ? { background: 'var(--bg0)', borderRadius: 0, padding: 40, width: '100vw', height: '100vh', overflowY: 'auto', boxShadow: 'none', display: 'flex', flexDirection: 'column' }
     : { background: 'var(--bg0)', borderRadius: 16, padding: 40, width: 820, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: fullscreen ? 'transparent' : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: fullscreen ? 'stretch' : 'center', justifyContent: 'center', zIndex: 1000 }}>
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, background: fullscreen ? 'transparent' : 'rgba(0,0,0,0.4)', display: 'flex', alignItems: fullscreen ? 'stretch' : 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div style={modalStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)' }}>
@@ -434,7 +435,8 @@ function JobModal({ job, onClose, onSaved }: {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
