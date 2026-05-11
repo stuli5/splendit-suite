@@ -37,13 +37,13 @@ function MarkdownText({ text }: { text: string }) {
 
     if (/^## (.+)/.test(line)) {
       nodes.push(
-        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginTop: 20, marginBottom: 6, letterSpacing: '0.06em' }}>
+        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.95rem', color: '#111', marginTop: 24, marginBottom: 8, letterSpacing: '0.02em' }}>
           {line.replace(/^## /, '')}
         </div>
       )
     } else if (/^### (.+)/.test(line)) {
       nodes.push(
-        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.78rem', color: '#333', marginTop: 14, marginBottom: 4 }}>
+        <div key={i} style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.85rem', color: '#333', marginTop: 16, marginBottom: 6 }}>
           {line.replace(/^### /, '')}
         </div>
       )
@@ -75,7 +75,7 @@ function MarkdownText({ text }: { text: string }) {
   }
 
   return (
-    <div style={{ fontSize: '0.875rem', color: '#444', lineHeight: 1.85, fontFamily: 'JetBrains Mono, monospace' }}>
+    <div style={{ fontSize: '0.9rem', color: '#444', lineHeight: 1.8, fontFamily: 'Inter, system-ui, sans-serif' }}>
       {nodes}
     </div>
   )
