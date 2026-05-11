@@ -16,7 +16,7 @@ interface Props {
 /** How many days ahead to notify */
 const ALERT_DAYS = 7
 
-function getDaysUntilBirthday(dateOfBirth: string): number {
+export function getDaysUntilBirthday(dateOfBirth: string): number {
   const now = new Date()
   const dob = new Date(dateOfBirth)
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())

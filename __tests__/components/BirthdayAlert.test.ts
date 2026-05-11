@@ -1,4 +1,4 @@
-import { getUpcomingBirthdays } from '@/components/crm-candidates/BirthdayAlert'
+import { getUpcomingBirthdays, getDaysUntilBirthday } from '@/components/crm-candidates/BirthdayAlert'
 import type { CRMCandidate } from '@/lib/types'
 
 function makeCandidate(overrides: Partial<CRMCandidate> & { id: string }): CRMCandidate {
@@ -18,6 +18,20 @@ function dobInDays(days: number): string {
   const year = d.getFullYear() - 25
   return `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+describe('getDaysUntilBirthday', () => {
+  it('returns 0 for today', () => {
+    expect(getDaysUntilBirthday(dobInDays(0))).toBe(0)
+  })
+
+  it('returns 1 for tomorrow', () => {
+    expect(getDaysUntilBirthday(dobInDays(1))).toBe(1)
+  })
+
+  it('returns 7 for 7 days ahead', () => {
+    expect(getDaysUntilBirthday(dobInDays(7))).toBe(7)
+  })
+})
 
 describe('getUpcomingBirthdays', () => {
   it('returns empty array when no candidates have dateOfBirth', () => {

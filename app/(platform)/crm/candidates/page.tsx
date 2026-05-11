@@ -8,7 +8,7 @@ import type { CRMCandidate, CRMStage } from '@/lib/types'
 import CandidateModal  from '@/components/crm-candidates/CandidateModal'
 import CandidateDetail from '@/components/crm-candidates/CandidateDetail'
 import CandidateKanban from '@/components/crm-candidates/CandidateKanban'
-import BirthdayAlert, { getUpcomingBirthdays } from '@/components/crm-candidates/BirthdayAlert'
+import BirthdayAlert, { getUpcomingBirthdays, getDaysUntilBirthday } from '@/components/crm-candidates/BirthdayAlert'
 
 const STAGE_COLORS: Record<CRMStage, string> = {
   new:       '#6b7280',
@@ -508,7 +508,7 @@ export default function CandidatesPage() {
                       style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 15, height: 15 }}
                     />
                   </th>
-                  {['Name', 'Position', 'Stage', 'Contact', 'Profiles', ''].map(h => (
+                  {['Name', 'Position', 'Stage', 'Contact', 'Birthday', 'Profiles', ''].map(h => (
                     <th key={h} style={{
                       padding: '10px 16px', textAlign: 'left', fontSize: '0.68rem',
                       color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.06em',
@@ -585,6 +585,34 @@ export default function CandidatesPage() {
                         {c.phone && <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 2 }}>{c.phone}</div>}
                         {!c.email && !c.phone && <span style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>—</span>}
                       </td>
+                      {/* Birthday */}
+                      <td style={{ padding: '13px 16px' }}>
+                        {(() => {
+                          if (!c.dateOfBirth) return <span style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>—</span>
+                          const days = getDaysUntilBirthday(c.dateOfBirth)
+                          const d = new Date(c.dateOfBirth)
+                          const dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                          if (days > 7) {
+                            return <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{dateLabel}</span>
+                          }
+                          const isToday = days === 0
+                          const color = isToday ? '#e0457a' : days <= 2 ? '#ff8c42' : '#0091c7'
+                          const badge = isToday ? 'Today!' : days === 1 ? 'Tomorrow' : `${days}d`
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: '0.78rem', fontWeight: 600, color }}>{dateLabel}</span>
+                              <span style={{
+                                display: 'inline-block', padding: '2px 7px', borderRadius: 20,
+                                background: color, color: 'white',
+                                fontSize: '0.65rem', fontWeight: 700,
+                                fontFamily: 'Syne, sans-serif',
+                                animation: isToday ? 'pulse 1.5s ease-in-out infinite' : undefined,
+                              }}>{badge}</span>
+                            </div>
+                          )
+                        })()}
+                      </td>
+
                       {/* Profiles */}
                       <td style={{ padding: '13px 16px' }}>
                         <div style={{ display: 'flex', gap: 8 }}>
