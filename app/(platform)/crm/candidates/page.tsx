@@ -8,6 +8,7 @@ import type { CRMCandidate, CRMStage } from '@/lib/types'
 import CandidateModal  from '@/components/crm-candidates/CandidateModal'
 import CandidateDetail from '@/components/crm-candidates/CandidateDetail'
 import CandidateKanban from '@/components/crm-candidates/CandidateKanban'
+import BirthdayAlert, { getUpcomingBirthdays } from '@/components/crm-candidates/BirthdayAlert'
 
 const STAGE_COLORS: Record<CRMStage, string> = {
   new:       '#6b7280',
@@ -80,13 +81,16 @@ export default function CandidatesPage() {
   const [detail,       setDetail]       = useState<CRMCandidate | undefined>()
   const [importing,    setImporting]    = useState(false)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
-  const [selected,     setSelected]     = useState<Set<string>>(new Set())
+  const [selected,       setSelected]       = useState<Set<string>>(new Set())
+  const [showBirthdays,  setShowBirthdays]  = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
 
   async function load() {
     setLoading(true)
-    setCandidates(await getCRMCandidates())
+    const loaded = await getCRMCandidates()
+    setCandidates(loaded)
     setLoading(false)
+    if (getUpcomingBirthdays(loaded).length > 0) setShowBirthdays(true)
   }
 
   useEffect(() => { load() }, [])
@@ -662,6 +666,15 @@ export default function CandidatesPage() {
           candidate={editing}
           onClose={() => setShowModal(false)}
           onSaved={() => { setShowModal(false); load() }}
+        />
+      )}
+
+      {/* Birthday alert */}
+      {showBirthdays && (
+        <BirthdayAlert
+          candidates={candidates}
+          onClose={() => setShowBirthdays(false)}
+          onOpenCandidate={c => { setDetail(c); setShowBirthdays(false) }}
         />
       )}
     </div>

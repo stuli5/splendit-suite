@@ -41,6 +41,7 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
   const [gitHub,    setGitHub]    = useState(candidate?.gitHub    ?? '')
   const [email,     setEmail]     = useState(candidate?.email     ?? '')
   const [phone,     setPhone]     = useState(candidate?.phone     ?? '')
+  const [dateOfBirth, setDateOfBirth] = useState(candidate?.dateOfBirth ?? '')
   const [note,      setNote]      = useState(candidate?.note      ?? '')
   const [skills,    setSkills]    = useState<string[]>(candidate?.skills ?? [])
   const [skillInput, setSkillInput] = useState('')
@@ -108,8 +109,9 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
     if (gitHub.trim())   data.gitHub   = gitHub.trim()
     if (email.trim())    data.email    = email.trim()
     if (phone.trim())    data.phone    = phone.trim()
-    if (note.trim())     data.note     = note.trim()
-    if (skills.length)   data.skills   = skills
+    if (note.trim())        data.note        = note.trim()
+    if (skills.length)      data.skills      = skills
+    if (dateOfBirth.trim()) data.dateOfBirth = dateOfBirth.trim()
 
     let savedId = candidate?.id ?? ''
 
@@ -314,6 +316,18 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
               <label style={LABEL_STYLE}>PHONE</label>
               <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+420 ..." style={INPUT_STYLE} />
             </div>
+          </div>
+
+          {/* Date of Birth */}
+          <div>
+            <label style={LABEL_STYLE}>DATE OF BIRTH</label>
+            <input
+              type="date"
+              value={dateOfBirth}
+              onChange={e => setDateOfBirth(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              style={INPUT_STYLE}
+            />
           </div>
 
           {/* Note */}

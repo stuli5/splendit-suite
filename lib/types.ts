@@ -52,6 +52,7 @@ export interface CRMCandidate {
   imsId?:       string
   cvUrl?:       string
   cvName?:      string
+  dateOfBirth?: string  // ISO date YYYY-MM-DD
   source?:      CandidateSource
   stageHistory?: StageHistoryEntry[]
   createdAt:    number
