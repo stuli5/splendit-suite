@@ -19,6 +19,24 @@ const STATUS_LABELS: Record<ProjectStatus, string> = {
   closed:   'Closed',
 }
 
+const PHASE_COLORS: Record<string, string> = {
+  contacted:    '#0091c7',
+  presentation: '#6b46a8',
+  interview:    '#00a87a',
+  rejected:     '#e0457a',
+  onboarding:   '#f59e0b',
+  closed:       '#7ab8ae',
+}
+
+const PHASE_LABELS: Record<string, string> = {
+  contacted:    'Contacted',
+  presentation: 'Presentation',
+  interview:    'Interview',
+  rejected:     'Rejected',
+  onboarding:   'Onboarding',
+  closed:       'Closed',
+}
+
 function timeAgo(ts: number): string {
   const days = Math.floor((Date.now() - ts) / 86_400_000)
   if (days === 0) return 'today'
@@ -137,12 +155,12 @@ export default function ProjectsPage() {
           {/* Table header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 1.5fr 100px 110px 110px 90px 80px',
+            gridTemplateColumns: '2fr 1.2fr 1.8fr 100px 110px 110px 90px 80px',
             padding: '10px 20px',
             background: 'rgba(0,168,122,0.04)',
             borderBottom: '1px solid rgba(0,168,122,0.1)',
           }}>
-            {['Position', 'Company', 'Type', 'Cooperation', 'Salary', 'Required', 'Created'].map(h => (
+            {['Position', 'Company', 'Phases', 'Type', 'Cooperation', 'Salary', 'Required', 'Created'].map(h => (
               <span key={h} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 {h}
               </span>
@@ -158,7 +176,7 @@ export default function ProjectsPage() {
                 onClick={() => setSelected(p)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1.5fr 100px 110px 110px 90px 80px',
+                  gridTemplateColumns: '2fr 1.2fr 1.8fr 100px 110px 110px 90px 80px',
                   padding: '14px 20px',
                   cursor: 'pointer',
                   borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
@@ -187,6 +205,23 @@ export default function ProjectsPage() {
                 <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem', color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.companyName}
                 </span>
+
+                {/* Phases */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  {p.phases.map(ph => {
+                    const phColor = PHASE_COLORS[ph] ?? '#aaa'
+                    return (
+                      <span key={ph} style={{
+                        fontSize: '0.58rem', fontWeight: 700, padding: '2px 6px', borderRadius: 20,
+                        background: `${phColor}14`, color: phColor,
+                        fontFamily: 'JetBrains Mono, monospace', border: `1px solid ${phColor}30`,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {PHASE_LABELS[ph] ?? ph}
+                      </span>
+                    )
+                  })}
+                </div>
 
                 {/* Type */}
                 <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
