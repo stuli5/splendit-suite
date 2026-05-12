@@ -220,7 +220,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <main style={{ maxWidth: 1140, margin: '0 auto', padding: '80px 24px', textAlign: 'center', color: '#aaa', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '80px 24px', textAlign: 'center', color: '#aaa', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}>
         Loading...
       </main>
     )
@@ -237,7 +237,7 @@ export default function JobDetailPage() {
       <div style={{
         background: 'linear-gradient(135deg, #00a87a 0%, #0091c7 100%)',
       }}>
-        <div style={{ maxWidth: 1140, margin: '0 auto', padding: '28px 28px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 40px 0' }}>
           <a href="/careers" style={{
             fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', textDecoration: 'none',
             fontFamily: 'JetBrains Mono, monospace', display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -246,7 +246,7 @@ export default function JobDetailPage() {
           </a>
         </div>
 
-        <div style={{ maxWidth: 1140, margin: '0 auto', padding: '24px 28px 36px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 40px 36px' }}>
           {/* Company badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -317,7 +317,7 @@ export default function JobDetailPage() {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '36px 28px 60px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 40px 60px' }}>
 
         <div style={{ background: '#fff', borderRadius: 14, padding: '28px 32px', border: '1px solid #eee', marginBottom: 16 }}>
           <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#111', marginBottom: 16, letterSpacing: '0.08em' }}>

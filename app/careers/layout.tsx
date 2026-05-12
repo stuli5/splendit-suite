@@ -15,7 +15,7 @@ export default function CareersLayout({ children }: { children: React.ReactNode 
         top: 0,
         zIndex: 50,
       }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66 }}>
           <a href="https://splendit.cz" target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 0 }}>
             <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 900, fontSize: '1.45rem', color: '#fff', letterSpacing: '-0.03em' }}>
               Splend<span style={{ color: '#00a87a' }}>IT</span>

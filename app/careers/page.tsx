@@ -144,12 +144,12 @@ export default function CareersPage() {
 
       {/* ── Hero ── */}
       <div style={{
-        padding: '72px 28px 80px',
+        padding: '72px 40px 80px',
         position: 'relative',
         zIndex: 1,
       }}>
 
-        <div style={{ maxWidth: 760, margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
           <div style={{ marginBottom: 16 }}>
             <span style={{
               fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', fontWeight: 600,
@@ -177,7 +177,7 @@ export default function CareersPage() {
           </p>
 
           {/* Search in hero */}
-          <div style={{ position: 'relative', maxWidth: 500 }}>
+          <div style={{ position: 'relative', maxWidth: 640 }}>
             <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', pointerEvents: 'none' }}>🔍</span>
             <input
               type="search"
@@ -213,7 +213,7 @@ export default function CareersPage() {
       </div>
 
       {/* ── Listings ── */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 28px 60px', position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 40px 60px', position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#bbb', fontSize: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
             Loading positions...
