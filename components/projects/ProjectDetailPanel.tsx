@@ -124,38 +124,42 @@ export default function ProjectDetailPanel({ project: initialProject, onClose, o
           {project.positionName}
         </h1>
 
-        {/* Badges */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
+        {/* Attributes strip */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 0,
+          marginBottom: 0, borderTop: '1px solid rgba(255,255,255,0.07)',
+          marginTop: 4,
+        }}>
           {[
-            { label: project.status.toUpperCase(), color: statusColor, bg: `${statusColor}22` },
-            { label: TYPE_LABEL[project.type],     color: 'rgba(255,255,255,0.65)', bg: 'rgba(255,255,255,0.1)' },
-            { label: project.cooperationType,      color: 'rgba(255,255,255,0.65)', bg: 'rgba(255,255,255,0.1)' },
-          ].map(b => (
-            <span key={b.label} style={{
-              fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-              background: b.bg, color: b.color,
-              fontFamily: 'JetBrains Mono, monospace',
-              border: `1px solid ${b.color}40`,
+            { label: 'COMPANY',     value: project.companyName },
+            { label: 'STATUS',      value: project.status.toUpperCase(), color: statusColor },
+            { label: 'TYPE',        value: TYPE_LABEL[project.type] },
+            { label: 'COOPERATION', value: project.cooperationType },
+            { label: 'REQUIRED',    value: `${candidates.length} / ${project.requiredCount}` },
+            ...(project.salary      ? [{ label: 'SALARY',      value: project.salary,      color: '#00a87a' }] : []),
+            ...(project.responsible ? [{ label: 'RESPONSIBLE', value: project.responsible }] : []),
+          ].map((attr, i, arr) => (
+            <div key={attr.label} style={{
+              padding: '12px 20px 12px 0',
+              marginRight: 28,
+              borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+              paddingRight: i < arr.length - 1 ? 28 : 0,
             }}>
-              {b.label}
-            </span>
+              <div style={{
+                fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem',
+                fontWeight: 700, color: 'rgba(255,255,255,0.35)',
+                letterSpacing: '0.1em', marginBottom: 4,
+              }}>
+                {attr.label}
+              </div>
+              <div style={{
+                fontFamily: 'JetBrains Mono, monospace', fontSize: '0.82rem',
+                fontWeight: 600, color: (attr as { label: string; value: string; color?: string }).color ?? 'rgba(255,255,255,0.88)',
+              }}>
+                {attr.value}
+              </div>
+            </div>
           ))}
-          {project.salary && (
-            <span style={{
-              fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-              background: 'rgba(0,168,122,0.18)', color: '#00a87a',
-              fontFamily: 'JetBrains Mono, monospace', border: '1px solid rgba(0,168,122,0.3)',
-            }}>
-              {project.salary}
-            </span>
-          )}
-          <span style={{
-            fontSize: '0.7rem', fontWeight: 600, padding: '3px 10px', borderRadius: 20,
-            background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)',
-            fontFamily: 'JetBrains Mono, monospace',
-          }}>
-            {candidates.length} / {project.requiredCount} required
-          </span>
         </div>
 
         {/* Tabs */}
