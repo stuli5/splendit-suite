@@ -123,7 +123,7 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* Projects grid */}
+      {/* Projects list */}
       {loading ? (
         <div className="glass-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.82rem', fontFamily: 'JetBrains Mono, monospace' }}>
           Loading projects...
@@ -133,66 +133,85 @@ export default function ProjectsPage() {
           {projects.length === 0 ? 'No projects yet. Create your first project.' : 'No projects match your search.'}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
-          {filtered.map(p => {
+        <div className="glass-card" style={{ overflow: 'hidden', padding: 0 }}>
+          {/* Table header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1.5fr 100px 110px 110px 90px 80px',
+            padding: '10px 20px',
+            background: 'rgba(0,168,122,0.04)',
+            borderBottom: '1px solid rgba(0,168,122,0.1)',
+          }}>
+            {['Position', 'Company', 'Type', 'Cooperation', 'Salary', 'Required', 'Created'].map(h => (
+              <span key={h} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {h}
+              </span>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {filtered.map((p, i) => {
             const color = STATUS_COLOR[p.status]
             return (
               <div
                 key={p.id}
                 onClick={() => setSelected(p)}
-                className="glass-card"
                 style={{
-                  padding: '18px 20px', cursor: 'pointer',
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1.5fr 100px 110px 110px 90px 80px',
+                  padding: '14px 20px',
+                  cursor: 'pointer',
+                  borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
                   borderLeft: `3px solid ${color}`,
-                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  transition: 'background 0.12s',
+                  alignItems: 'center',
                 }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLDivElement
-                  el.style.transform = 'translateY(-2px)'
-                  el.style.boxShadow = `0 8px 28px rgba(0,0,0,0.1)`
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLDivElement
-                  el.style.transform = 'translateY(0)'
-                  el.style.boxShadow = ''
-                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,168,122,0.04)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-                  <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.95rem', color: 'var(--text)', margin: 0, lineHeight: 1.3 }}>
+                {/* Position + status */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.positionName}
-                  </h3>
+                  </span>
                   <span style={{
-                    fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, flexShrink: 0,
+                    fontSize: '0.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: 20, flexShrink: 0,
                     background: `${color}18`, color, fontFamily: 'JetBrains Mono, monospace',
                     border: `1px solid ${color}30`,
                   }}>
                     {STATUS_LABELS[p.status]}
                   </span>
                 </div>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.76rem', color: 'var(--text-dim)', marginBottom: 12 }}>
+
+                {/* Company */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem', color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.companyName}
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-                  <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20, background: 'rgba(0,168,122,0.08)', color: 'var(--primary)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                    {p.type}
-                  </span>
-                  <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20, background: 'rgba(0,0,0,0.05)', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono, monospace' }}>
-                    {p.cooperationType}
-                  </span>
-                  {p.salary && (
-                    <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20, background: 'rgba(107,70,168,0.08)', color: '#6b46a8', fontFamily: 'JetBrains Mono, monospace' }}>
-                      {p.salary}
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem', color: '#bbb' }}>
-                    {timeAgo(p.createdAt)}
-                  </span>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem', color: 'var(--text-dim)' }}>
-                    {p.phases.length} stages · {p.requiredCount} req.
-                  </span>
-                </div>
+                </span>
+
+                {/* Type */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
+                  {p.type}
+                </span>
+
+                {/* Cooperation */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  {p.cooperationType}
+                </span>
+
+                {/* Salary */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: '#6b46a8', fontWeight: 600 }}>
+                  {p.salary ?? '—'}
+                </span>
+
+                {/* Required */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  {p.requiredCount} req.
+                </span>
+
+                {/* Created */}
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.68rem', color: '#bbb' }}>
+                  {timeAgo(p.createdAt)}
+                </span>
               </div>
             )
           })}
