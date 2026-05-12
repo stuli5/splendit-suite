@@ -149,7 +149,7 @@ export default function CareersPage() {
         zIndex: 1,
       }}>
 
-        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', textAlign: 'center' }}>
           <div style={{ marginBottom: 16 }}>
             <span style={{
               fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', fontWeight: 600,
@@ -170,14 +170,14 @@ export default function CareersPage() {
 
           <p style={{
             fontFamily: 'JetBrains Mono, monospace', fontSize: '0.88rem',
-            color: 'rgba(255,255,255,0.55)', lineHeight: 1.8, margin: '0 0 36px', maxWidth: 480,
+            color: 'rgba(255,255,255,0.55)', lineHeight: 1.8, margin: '0 auto 36px', maxWidth: 480,
           }}>
             We place top IT professionals into the best projects and companies across Central Europe.
             Remote-first, contract or permanent — find your next role here.
           </p>
 
           {/* Search in hero */}
-          <div style={{ position: 'relative', maxWidth: 640 }}>
+          <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
             <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', pointerEvents: 'none' }}>🔍</span>
             <input
               type="search"
@@ -196,7 +196,7 @@ export default function CareersPage() {
           </div>
 
           {/* Filters inside hero */}
-          <div style={{ display: 'flex', gap: 6, marginTop: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
             {MODES.map(m => (
               <FilterBtn key={m} active={mode === m} onClick={() => setMode(m)}>
                 {m === ALL ? 'All modes' : WORK_MODE_LABELS[m]}
