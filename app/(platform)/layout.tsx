@@ -5,6 +5,49 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Sidebar from '@/components/layout/Sidebar'
 import { upsertTeamMember } from '@/lib/team'
+import { SidebarProvider, useSidebar } from '@/lib/sidebar-context'
+
+const SIDEBAR_EXPANDED = '220px'
+const SIDEBAR_COLLAPSED = '64px'
+
+function PlatformContent({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const { collapsed } = useSidebar()
+
+  useEffect(() => {
+    if (!user) return
+    upsertTeamMember({
+      uid:         user.uid,
+      displayName: user.displayName ?? user.email ?? 'Unknown',
+      email:       user.email ?? '',
+    }).catch(() => {})
+  }, [user?.uid])
+
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)', position: 'relative' }}>
+      <div className="aurora">
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
+        <div className="aurora-blob" />
+      </div>
+
+      <Sidebar />
+
+      <main style={{
+        marginLeft: sidebarWidth,
+        flex: 1,
+        padding: '32px 36px',
+        position: 'relative',
+        zIndex: 1,
+        transition: 'margin-left 0.22s ease',
+      }}>
+        {children}
+      </main>
+    </div>
+  )
+}
 
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -15,15 +58,6 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       router.replace('/login')
     }
   }, [user, loading, router])
-
-  useEffect(() => {
-    if (!user) return
-    upsertTeamMember({
-      uid:         user.uid,
-      displayName: user.displayName ?? user.email ?? 'Unknown',
-      email:       user.email ?? '',
-    }).catch(() => {})
-  }, [user?.uid])
 
   if (loading) {
     return (
@@ -49,25 +83,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   if (!user) return null
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg0)', position: 'relative' }}>
-      {/* Aurora */}
-      <div className="aurora">
-        <div className="aurora-blob" />
-        <div className="aurora-blob" />
-        <div className="aurora-blob" />
-      </div>
-
-      <Sidebar />
-
-      <main style={{
-        marginLeft: 'var(--sidebar-width)',
-        flex: 1,
-        padding: '32px 36px',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <PlatformContent>{children}</PlatformContent>
+    </SidebarProvider>
   )
 }

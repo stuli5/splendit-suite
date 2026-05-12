@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getProjects } from '@/lib/projects'
 import type { Project, ProjectStatus } from '@/lib/types'
+import { useSidebar } from '@/lib/sidebar-context'
 import ProjectModal from '@/components/projects/ProjectModal'
 import ProjectDetailPanel from '@/components/projects/ProjectDetailPanel'
 
@@ -32,6 +33,7 @@ export default function ProjectsPage() {
   const [filter,    setFilter]    = useState<ProjectStatus | 'all'>('all')
   const [showNew,   setShowNew]   = useState(false)
   const [selected,  setSelected]  = useState<Project | null>(null)
+  const { setCollapsed } = useSidebar()
 
   async function load() {
     setLoading(true)
@@ -40,6 +42,11 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  // Collapse sidebar when a project is open
+  useEffect(() => {
+    setCollapsed(selected !== null)
+  }, [selected, setCollapsed])
 
   const filtered = projects.filter(p => {
     const q = search.toLowerCase()
@@ -55,6 +62,19 @@ export default function ProjectsPage() {
     fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', fontWeight: active ? 700 : 500,
     transition: 'all 0.15s',
   })
+
+  // Full-screen project detail
+  if (selected) {
+    return (
+      <div style={{ margin: '-32px -36px', minHeight: '100vh' }}>
+        <ProjectDetailPanel
+          project={selected}
+          onClose={() => setSelected(null)}
+          onUpdated={updated => { setSelected(updated); load() }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -179,20 +199,10 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {/* New project modal */}
       {showNew && (
         <ProjectModal
           onClose={() => setShowNew(false)}
           onSaved={() => { setShowNew(false); load() }}
-        />
-      )}
-
-      {/* Project detail panel */}
-      {selected && (
-        <ProjectDetailPanel
-          project={selected}
-          onClose={() => setSelected(null)}
-          onUpdated={updated => { setSelected(updated); load() }}
         />
       )}
     </div>
