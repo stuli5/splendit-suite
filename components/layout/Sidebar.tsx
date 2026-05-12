@@ -12,7 +12,7 @@ const modules = [
   { href: '/crm/candidates',  icon: '👤', label: 'Candidates' },
   { href: '/crm/analytics',  icon: '📊', label: 'Funnel Analytics' },
   { href: '/crm/spolecnosti', icon: '🏢', label: 'Companies' },
-  { href: '/crm/projekty',    icon: '📁', label: 'Projects' },
+  { href: '/crm/projects',    icon: '📁', label: 'Projects' },
   { href: '/ims',             icon: '🎯', label: 'IMS' },
   { href: '/meet-visualizer', icon: '🕸', label: 'Meet Visualizer' },
   { href: '/deal-radar',      icon: '📡', label: 'Deal Radar' },
