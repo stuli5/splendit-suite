@@ -246,10 +246,10 @@ export default function CandidateDetail({ candidate, onClose, onEdit, onDelete, 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 0 }}>
             {([
-              { key: 'overview',    label: 'Overview' },
-              { key: 'evaluation',  label: 'Evaluation', disabled: !candidate.imsId },
-              { key: 'activity',    label: 'Activity' },
-            ] as const).map(({ key, label, disabled }) => (
+              { key: 'overview'   as const, label: 'Overview',   disabled: false },
+              { key: 'evaluation' as const, label: 'Evaluation', disabled: !candidate.imsId },
+              { key: 'activity'   as const, label: 'Activity',   disabled: false },
+            ]).map(({ key, label, disabled }) => (
               <button
                 key={key}
                 onClick={() => !disabled && setActiveTab(key)}
