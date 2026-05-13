@@ -76,6 +76,24 @@ export async function clearAllWorklogs(): Promise<void> {
   await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
 }
 
+export async function getContractsByCandidate(candidateId: string, candidateName: string): Promise<Contract[]> {
+  const [byId, byName] = await Promise.all([
+    getDocs(query(collection(db, 'contracts'), where('candidateId', '==', candidateId))),
+    getDocs(query(collection(db, 'contracts'), where('contractorName', '==', candidateName))),
+  ])
+  const seen = new Set<string>()
+  const results: Contract[] = []
+  for (const snap of [byId, byName]) {
+    for (const d of snap.docs) {
+      if (!seen.has(d.id)) {
+        seen.add(d.id)
+        results.push({ id: d.id, ...d.data() } as Contract)
+      }
+    }
+  }
+  return results.sort((a, b) => b.startDate.localeCompare(a.startDate))
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function marginPercent(mdRateClient: number, mdRateContractor: number): number {

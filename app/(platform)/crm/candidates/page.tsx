@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { collection, addDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { getCRMCandidates, deleteCRMCandidate } from '@/lib/crm-candidates'
@@ -70,6 +71,7 @@ type SortKey = 'name' | 'date'
 type View    = 'table' | 'kanban'
 
 export default function CandidatesPage() {
+  const searchParams = useSearchParams()
   const [candidates,   setCandidates]   = useState<CRMCandidate[]>([])
   const [loading,      setLoading]      = useState(true)
   const [search,       setSearch]       = useState('')
@@ -94,6 +96,13 @@ export default function CandidatesPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    const openId = searchParams.get('open')
+    if (!openId || candidates.length === 0) return
+    const found = candidates.find(c => c.id === openId)
+    if (found) setDetail(found)
+  }, [searchParams, candidates])
 
   async function handleDelete(c: CRMCandidate) {
     if (!confirm(`Delete candidate "${c.firstName} ${c.lastName}"?`)) return
