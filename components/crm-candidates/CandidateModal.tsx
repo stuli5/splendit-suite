@@ -52,11 +52,9 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
   const [saving,    setSaving]    = useState(false)
   const [parsing,   setParsing]   = useState(false)
   const [parseMsg,  setParseMsg]  = useState('')
+  const [dragging,  setDragging]  = useState(false)
 
-  async function handleCvImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  async function processFile(file: File) {
     setCvFile(file)
     setRemoveCv(false)
     setParsing(true)
@@ -91,6 +89,25 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
       setParsing(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  function handleCvImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) processFile(file)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    if (parsing) return
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (!['pdf', 'doc', 'docx'].includes(ext ?? '')) {
+      setParseMsg('Only PDF or Word files are supported.')
+      return
+    }
+    processFile(file)
   }
 
   async function handleSave() {
@@ -165,18 +182,25 @@ export default function CandidateModal({ candidate, onClose, onSaved }: Props) {
         <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* CV Import */}
-          <div style={{
-            padding: '14px 16px', borderRadius: 10,
-            border: '1.5px dashed rgba(0,168,122,0.35)',
-            background: 'rgba(0,168,122,0.03)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-          }}>
+          <div
+            onDragOver={e => { e.preventDefault(); if (!parsing) setDragging(true) }}
+            onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false) }}
+            onDrop={handleDrop}
+            style={{
+              padding: '14px 16px', borderRadius: 10,
+              border: dragging ? '2px dashed #00a87a' : '1.5px dashed rgba(0,168,122,0.35)',
+              background: dragging ? 'rgba(0,168,122,0.07)' : 'rgba(0,168,122,0.03)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+              transition: 'border-color 0.15s, background 0.15s',
+              cursor: parsing ? 'default' : 'default',
+            }}
+          >
             <div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>
-                Import from CV
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: dragging ? '#00a87a' : 'var(--text)', marginBottom: 2, transition: 'color 0.15s' }}>
+                {dragging ? 'Drop to import CV' : 'Import from CV'}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                PDF or Word document — fields will be auto-filled by AI
+                {dragging ? 'Release to upload and parse' : 'PDF or Word — drag & drop or click Upload'}
               </div>
               {parseMsg && (
                 <div style={{
