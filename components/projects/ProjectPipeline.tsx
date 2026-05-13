@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { Project, ProjectCandidate, ProjectPhase } from '@/lib/types'
-import { updateCandidatePhase } from '@/lib/project-candidates'
+import { updateCandidatePhase, removeCandidateFromProject } from '@/lib/project-candidates'
 import { useAuth } from '@/lib/auth-context'
 
 const PHASE_COLORS: Record<ProjectPhase, string> = {
@@ -51,6 +52,18 @@ interface Props {
   project:    Project
   candidates: ProjectCandidate[]
   onChange:   () => void
+}
+
+async function handleRemove(
+  pc: ProjectCandidate,
+  actor: { uid: string; displayName: string; email: string } | undefined,
+  onChange: () => void,
+) {
+  if (!confirm(`Remove ${pc.candidateFirstName} ${pc.candidateLastName} from this project?`)) return
+  await removeCandidateFromProject(pc.id, actor
+    ? { actor, entityName: `${pc.candidateFirstName} ${pc.candidateLastName}` }
+    : undefined)
+  onChange()
 }
 
 export default function ProjectPipeline({ project, candidates, onChange }: Props) {
@@ -129,6 +142,7 @@ export default function ProjectPipeline({ project, candidates, onChange }: Props
                     opacity: draggingId === c.id ? 0.45 : 1,
                     boxShadow: draggingId === c.id ? '0 4px 16px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.05)',
                     transition: 'opacity 0.15s, box-shadow 0.15s',
+                    position: 'relative',
                   }}
                 >
                   <Avatar firstName={c.candidateFirstName} lastName={c.candidateLastName} />
@@ -142,6 +156,41 @@ export default function ProjectPipeline({ project, candidates, onChange }: Props
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.64rem', color: '#bbb', marginTop: 2 }}>
                       {timeAgo(c.addedAt)}
                     </div>
+                  </div>
+                  {/* Action buttons */}
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}
+                    onMouseDown={e => e.stopPropagation()}
+                  >
+                    <Link
+                      href={`/crm/candidates?open=${c.candidateId}`}
+                      draggable={false}
+                      title="Open candidate"
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 22, height: 22, borderRadius: 5,
+                        background: 'rgba(0,145,199,0.1)', color: '#0091c7',
+                        textDecoration: 'none', fontSize: '0.7rem',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      ↗
+                    </Link>
+                    <button
+                      draggable={false}
+                      title="Remove from project"
+                      onClick={e => { e.stopPropagation(); handleRemove(c, getActor(), onChange) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 22, height: 22, borderRadius: 5, border: 'none',
+                        background: 'rgba(224,69,122,0.1)', color: '#e0457a',
+                        cursor: 'pointer', fontSize: '0.75rem',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               ))}
