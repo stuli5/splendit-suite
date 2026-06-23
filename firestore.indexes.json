@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "projectCandidates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "projectId",   "order": "ASCENDING" },
+        { "fieldPath": "candidateId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "liApplicants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "projectId", "order": "ASCENDING" },
+        { "fieldPath": "status",    "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "liApplicants",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "linkedinId", "order": "ASCENDING" },
+        { "fieldPath": "projectId",  "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

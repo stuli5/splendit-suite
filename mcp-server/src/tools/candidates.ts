@@ -6,6 +6,12 @@ import { listDocs, getDocById, toText, toError } from '../utils/firestore.js'
 const CRMStage = z.enum(['new', 'screening', 'interview', 'offer'])
 const CandidateSource = z.enum(['linkedin', 'recru', 'manual', 'portal'])
 
+/** Normalize a LinkedIn profile URL or /in/ slug to a stable dedup key. */
+export function normalizeLinkedin(input: string): string {
+  const m = input.match(/\/in\/([^/?#]+)/i)
+  return (m ? m[1] : input).toLowerCase().replace(/\/+$/, '')
+}
+
 export function registerCandidateTools(server: McpServer): void {
   // ── list_candidates ────────────────────────────────────────────────────────
   server.tool(
@@ -101,7 +107,7 @@ export function registerCandidateTools(server: McpServer): void {
           position:     data.position,
           stage:        data.stage,
           source:       data.source,
-          ...(data.linkedIn && { linkedIn: data.linkedIn }),
+          ...(data.linkedIn && { linkedIn: data.linkedIn, linkedinId: normalizeLinkedin(data.linkedIn) }),
           ...(data.email    && { email:    data.email }),
           ...(data.phone    && { phone:    data.phone }),
           ...(data.skills   && { skills:   data.skills }),
@@ -114,6 +120,62 @@ export function registerCandidateTools(server: McpServer): void {
         return toText({ id: ref.id, ...doc })
       } catch (err) {
         return toError(`create_candidate failed: ${String(err)}`)
+      }
+    },
+  )
+
+  // ── find_candidate_by_linkedin ────────────────────────────────────────────
+  server.tool(
+    'find_candidate_by_linkedin',
+    'Resolve an inbound LinkedIn profile (URL or /in/ slug) to an existing CRM candidate. Returns found:false if unknown.',
+    { linkedin: z.string().min(1).describe('LinkedIn profile URL or /in/ slug') },
+    async ({ linkedin }) => {
+      try {
+        const linkedinId = normalizeLinkedin(linkedin)
+        const matches = await listDocs(
+          db.collection('crmCandidates').where('linkedinId', '==', linkedinId),
+          2,
+        )
+        return toText({ linkedinId, found: matches.length > 0, candidate: matches[0] ?? null })
+      } catch (err) {
+        return toError(`find_candidate_by_linkedin failed: ${String(err)}`)
+      }
+    },
+  )
+
+  // ── check_applicant ───────────────────────────────────────────────────────
+  server.tool(
+    'check_applicant',
+    'One-shot inbound applicant check: resolves a LinkedIn profile to a CRM candidate, pulls cross-project history, and returns a credibility verdict for the given target project.',
+    {
+      linkedin:        z.string().min(1),
+      targetProjectId: z.string().min(1).describe('The JD/project currently being reviewed'),
+    },
+    async ({ linkedin, targetProjectId }) => {
+      try {
+        const linkedinId = normalizeLinkedin(linkedin)
+        const found = await listDocs(
+          db.collection('crmCandidates').where('linkedinId', '==', linkedinId), 1,
+        )
+        if (found.length === 0) {
+          return toText({ linkedinId, known: false, verdict: 'new', otherProjectCount: 0, projects: [] })
+        }
+        const candidate = found[0]
+        const history = await listDocs(
+          db.collection('projectCandidates').where('candidateId', '==', candidate.id), 100,
+        )
+        const others            = history.filter((h) => h['projectId'] !== targetProjectId)
+        const otherProjectCount = new Set(others.map((h) => h['projectId'])).size
+        const verdict =
+          otherProjectCount >= 2 ? 'serial_spam' :
+          otherProjectCount === 1 ? 'warn' : 'known_clean'
+        return toText({
+          linkedinId, known: true, candidateId: candidate.id, verdict,
+          otherProjectCount,
+          projects: others.map((h) => ({ projectId: h['projectId'], phase: h['phase'] })),
+        })
+      } catch (err) {
+        return toError(`check_applicant failed: ${String(err)}`)
       }
     },
   )

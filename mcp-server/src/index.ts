@@ -9,6 +9,7 @@ import { registerDealTools      } from './tools/deals.js'
 import { registerBodyshopTools  } from './tools/bodyshop.js'
 import { registerActivityTools  } from './tools/activity.js'
 import { registerUserTools      } from './tools/users.js'
+import { registerLiRegisterTools } from './tools/li-register.js'
 
 const server = new McpServer({
   name:    'splendit-mcp',
@@ -23,6 +24,7 @@ registerDealTools(server)
 registerBodyshopTools(server)
 registerActivityTools(server)
 registerUserTools(server)
+registerLiRegisterTools(server)
 
 const transport = new StdioServerTransport()
 await server.connect(transport)
